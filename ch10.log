@@ -1,0 +1,25 @@
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9) (preloaded format=latex 2014.4.12)  16 MAY 2014 13:34
+entering extended mode
+**ch10.tex
+(D:\coolpan\adbookNew\ch10.tex
+LaTeX2e <2011/06/27>
+Babel <v3.8m> and hyphenation patterns for loaded.
+
+! LaTeX Error: Environment CJK* undefined.
+
+See the LaTeX manual or LaTeX Companion for explanation.
+Type  H <return>  for immediate help.
+ ...                                              
+                                                  
+l.3 \begin{CJK*}
+                {GBK}{song}
+? 
+! Emergency stop.
+ ...                                              
+                                                  
+l.3 \begin{CJK*}
+                {GBK}{song}
+Your command was ignored.
+Type  I <command> <return>  to replace it with another command,
+or  <return>  to continue without it.
+

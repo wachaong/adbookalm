@@ -1,0 +1,1159 @@
+\newpage
+
+\begin{CJK*}{GBK}{song}
+
+\setcounter{chapter}{3}
+\setcounter{section}{0}
+
+\chapter{竞价广告核心技术}
+
+\thispagestyle{empty}
+\markboth{竞价广告核心技术}{竞价广告核心技术}
+\section{位置拍卖市场}
+
+竞价广告是象拍卖那样销售广告。也就是根据广告主的出价，以及由此计算出的期望收益，决定谁可以得到某次展示的广告位。在竞价广告产生的开始阶段，出价是广告主阶段性调整的，而到了广告交易市场阶段，广告主可以对每次展示实时调整出价\footnote{实时竞价的具体产品和技术将在第八章中介绍。}，这两种方式从拍卖市场的宏观角度看，没有本质差别。
+
+让我们先来看看怎么具体描述竞价广告问题，并从宏观市场的角度了解一些非常重要的结论。假设有一组广告位可以被占用，将这些广告位按照其经验价值排名，分别记为$s={1, 2, \cdots, S}$，对Banner广告而言，这里的$S$一般为1。在某次广告请求中，有一组广告$a={1, 2, \cdots, A}$出价参与拍卖，每个广告的出价记为$b_a$，系统将前$S$ 个高出家的广告依次放到前面排序好的$S$个广告位上，这样的问题称为\begin{CJK*}{GBK}{kai}{位置拍卖(Position Auction)}\end{CJK*}。根据前文的讨论，当某个广告$a$ 被放在$s$ 位置上时，其期望收益即即eCPM为$r_{as}=\mu_s \nu_a$。这里我们做了一些假设，比如点击率$\mu$仅与位置$s$有关，而点击价值$\nu$仅与广告$a$ 有关，这些假设在搜索广告给定某具体关键词的情形下，可以说基本合理，对于显示广告的情形虽然非常粗略，但并不太影响对竞价问题宏观市场的讨论。
+
+围绕位置拍卖最重要的研究，是广告的\begin{CJK*}{GBK}{kai}{定价(Pricing)}\end{CJK*}问题。定价问题探讨的是在一次具体的拍卖交易中，给定各参与者的出价，以及他们的期望收益，如何对最后获得某个位置的广告商收取合适的费用。乍听起来，讨论这个问题有点多余，按照广告主自己的出价收取不就可以了么？为了阐释清楚此项研究的动机，我们先来看看下面的例子：假设有某个单位置($S=1$) 的广告机会在竞拍，开始有两个广告主参与，甲出价1 元，乙出价2 元，当然甲赢得了此次竞价，如果按照其出价来收费，市场就向他收取2元的费用。在广告市场里，这一拍卖机会还会重复出现(对应于不断产生的展示)，因此广告主可以也存在调整出价的机会，假设乙在发现自己2 元钱能拿到流量以后，自然就会想到，是不是可以调低出价，用更低的成本拿到流量？乙将一直不断尝试，知道把出价调低到1.01元，发现继续调低就拿不到位置了。于是系统稳定在甲出价1 元，乙出价1.01元。此时假设又有一个广告主丙加入竞争，并希望赢下此广告位，那么以此类推，他在不断调整后将会出价1.02元，市场的收入也就是1.02 元。我们有可能通过调整定价策略来影像系统的总收益么？这样的机会显然存在。比如我们在甲出2元，乙出1元参与竞价时，并不对获胜的甲收2 元，而是收取其下一名即乙的出价1 元，那么甲就没有动力调低其出价了。那么当丙加入时，就需要出价2元以上才可以赢得竞价，市场的收入也就变成了2 元(不论丙出价多少，我们都按其下一位即甲的出价来收费)。这个简单的例子告诉我们，在广告这样的参与者可以针对同一个标的物不断调整出价的拍卖环境中，通过聪明的定价策略，完全可能为整个市场创造更高的收益以及其他好处。
+
+在定价问题上，我们在微观上的直觉未必可以推广到宏观市场。让我们来看看如何对上面的位置拍卖问题作进一步探讨。从整个市场的角度来看，我们重点需要研究的是市场处于稳定状态下的收益和其他情况。而所谓稳定，指的是整个竞价系统处于纳什均衡(Nash Equilibrium)状态，也即每个广告商都通过出价得到了最符合自己利益的位置。对某一次位置竞价来说，其对称纳什均衡(Symmetric Nash Equilibrium)状态可以表示为下式：
+\begin{eqnarray}\label{SNE}
+\mu_s(\nu_s - p_s) &\geq& \mu_t(\nu_s - p_t), \forall t > s \nonumber \\
+\mu_s(\nu_s - p_s) &\geq& \mu_t(\nu_s - p_{t-1}), \forall t < s
+\end{eqnarray}
+注意这里的下标意义有所调整，这里的$\nu_s$指的是排在$s$位置上的广告上的点击价值，并非$s$位置带来的点击价值；而$p_s$指的是市场向排在$s$位置上的广告收取的费用，即定价。这一均衡状态的意义很容易理解：对于最终位置排名竞价结果中的每一条广告，其收益都比排在其他位置上要高。显然，在这样的状态下，每个广告商都达到了自己最优的状态，整个系统也就随之稳定下来。
+
+在公式\ref{SNE}中，市场方能够调整的策略，只有$p_s$的确定方式，也就是定价策略。随着定价策略的不同，市场达到稳定状态时的宏观收益情况和稳定的程度都有所不同。因此，有关竞价市场宏观性质的研究，主要目的是寻找更好的定价策略以优化整体收益。关于位置竞价问题纳什均衡状态的数学分析，由于与本书的产品和技术重点有一定差距，因此不再介绍这方面的内容，有兴趣的读者可以阅读文献\cite{Varian}。我们只介绍两种竞价市场用到的定价策略，以及与宏观市场相关的几个策略问题。
+
+\subsection{定价策略}
+
+在线广告竞价市场最常见的定价策略，是广义第二高价(Generalized Second Pricing, GSP)策略；另外有一种VCG(Vickrey–Clarke–Groves)定价策略，虽然理论上比GSP更好，但是由于原理较复杂，向广告主解释起来有难度，因此在实用系统中采用的并不多。下面我们分别介绍一下这两种定价策略。
+
+\subsubsection{广义第二高价}
+
+先来看看是么叫第二高价(Second Pricing)。所谓第二高价，指的是在位置拍卖中，向赢得某个位置的广告商收取其下一位广告主的出价。如果是按照CPM 结算，那么第二高价就可以直接应用了。需要考虑的问题是，在CPC计算的竞价广告系统中，广告主的出价是针对点击的，而竞价是针对eCPM 的，因此要对两者做一下换算以实现公平的第二高价，这就是所谓的广义第二高价，其定价公式为：
+\begin{eqnarray}\label{GSP}
+p_s = \mu_{s+1} b_{s+1} \big/  \mu_s + \Delta
+\end{eqnarray}
+如果将等式两边同时乘以$\mu_s$，可以看出广义第二高价实际上仍然是eCPM上的第二高价。读者也可以自行验证，在广义第二高价情形下，对某广告主的定价是一定不会大于其出价的。实际上，这种定价策略也同样适用于CPS结算的竞价市场，并且只需要将公式中的$\mu$ 换成$\mu\nu$即可。公式最后的$\Delta$，一般为广告系统结算货币的最小单位，比如1美分，这是一种历史惯例，也在某种程度上让广告主心理上感觉更加公平。
+
+对比上面提到的竞价广告的例子，可以直觉地知道，广义第二高价可以基本上满足市场稳定情形下收益优化的需求。不过需要说明的是，这种满足只是直觉上的而非理论意义下最优的，这一点读者可以对比下面介绍的VCG定价策略来理解。虽然并非理论上最优，广义第二高价却有着实现简单、容易向广告主解释等诸多操作中的优点，因此在实际的竞价广告系统中是最主流的定价策略。
+
+\subsubsection{VCG定价}
+
+VCG定价是Vickrey, Clarke和Groves在研究竞价系统均衡状态时得到的一种理论上较为优越的定价策略。其基本思想是：对于赢得了某个位置的广告主，其所付出的成本应该等于他占据这个位置给其他市场参与者带来的价值损害。在这一原则下，VCG的定价策略可以表示为：
+\begin{eqnarray}\label{VCG}
+p_s = \sum_{t>s} (\mu_{t-1} - \mu_{t}) \nu_t
+\end{eqnarray}
+
+这种定价策略直觉上的合理性很容易理解。实际上，理论分析表明，VCG定价策略的优越性体现在如下几个方面：首先，在这种定价策略的稳定状态下，整个市场是truth-telling的。所谓truth-telling，可以理解为每个广告主都找到了自己的最优状态。其次，相对于其他的定价策略，这种定价向广告主收取的费用是最少的。
+
+虽然有以上诸多的有点，VCG定价在在线竞价广告中却并不是一种主流的方式。究其原因，主要是由于这种定价方式的逻辑过于复杂，比较难以向广告主解释清楚；另外在广告主和媒体存在博弈关系的情形下，媒体是否正确地计算了“给其他市场参与者带来的价值损害”也很难验证。不过这种定价方法也有其市场空间，有的广告厂家，比如Facebook，在实际的系统中采用了这一定价方法。
+
+\subsection{市场保留价}
+
+为了控制广告的质量和保持一定的出售单价，竞价广告市场往往要设置一个能够赢得某个拍卖位置的最低价格，这一价格我们称之为市场保留价(Market Reserve Price, MRP)。广告主的出价只有在高于市场保留价时，才能获得竞价机会，同时在赢得某个拍卖位置后，如果根据定价策略算出的付费低于市场保留价，也需要调整到市场保留价的水平上。(以广义第二高价\ref{GSP}为例，很容易验证这种情况是可能发生的。)
+
+市场保留价有两种设置方法，一是对整个竞价市场采用同样的保留价格；二是根据不同标的物(例如搜索广告里的关键词)的特性设置不同的保留价格。
+
+\subsection{价格挤压}
+
+在CPC广告网络中，eCPM可以表示成点击率和出价的乘积。即$r= \mu\cdot\nu$。但是在有的情况下，我们有动机对此公式做一些微调，把它变成下面的形式：
+\begin{eqnarray}\label{squash}
+r= \mu^\kappa\cdot\nu
+\end{eqnarray}
+其中的$\kappa$为一个大于0的实数。我们可以考虑两种极端情况来理解$\kappa$的作用：当$\kappa \rightarrow \infty$ 时，相当于只根据点击率来排序，而不考虑出价的作用；反之，当$\kappa \rightarrow 0$时，则相当于只根据出价来排序。因此，随着$\kappa$ 的增大，相当于我们在挤压出价在整个竞价体系中的作用，因此我们把这个因子叫做价格积压(Squashing)因子。
+
+价格积压因子的作用，主要是为了能够根据市场情况，更主动地影响竞价体系向着需要的方向发展。比如说，如果发现市场上存在大量的出价较高但品质不高的广告主，则可以通过调高$\kappa$来强调质量和用户反馈的影响；如果发现市场的竞价激烈程度不够，则可以通过降低$\kappa$来鼓励竞争；如果存在短期的财务压力，则需要将$\kappa$调整到接近于1的范围，往往就可以使得整体营收有所上升。
+
+\subsection{整体竞价和计价过程}
+
+综合考虑上述几种竞价广告中常见的决策逻辑，在一次展示到来以后，实际的竞价决策过程可以用下面的代码来概要描述：
+\begin{lstlisting}[language={C++}]
+int auction(vector<int> & candidates, vector<float> & bids,
+            float MRP, float squash, int slotNum,
+            vector<int> & results, vector<float> & prices) {
+    int candNum = candidates.size();
+
+    // `遍历各个候选得到eCPM`
+    vector<float> eCPMs;
+    eCPMs.resize(candNum, 1e-10f);
+    for (int c = 0; c < candNum; c ++)
+        if (bids[c] >= MRP) // `跳过那些出价小于市场保留价的候选`
+            eCPMs[c] = calcu_eCPM();
+
+    // `将所有候选按照eCPM排序`
+    for (int c1 = 0; c1 < candNum; c1 ++)
+        for (int c2 = c1 + 1; c2 < candNum; c2 ++)
+            if (eCPMs[c1] < eCPMs[c2]) {
+                SWAP(candidates[c1], candidates[c2]);
+                SWAP(eCPMs     [c1], eCPMs     [c2]);
+            }
+
+    // `得到各竞价结果并计算定价`
+    results.clear() prices.clear();
+    for (int r = 0; r < slotNum; r ++) {
+        if (eCPMs[r] <= 1e-10f)
+            break;
+
+        // `按照GSP计算定价`
+    }
+}
+\end{lstlisting}
+
+我们用一个例子来直观地说明上述的综合竞价和定价过程：假设有一组广告竞争一个有多个slot的搜索广告展示机会，其出价和系统对其对其点击率的预估如下表中的第二行和第三行所示，那么计算出的eCPM，以及在点击发生时按照GSP和VCG定价策略向每个广告主收取的费用，如下表的后两行所示：
+
+\begin{table}
+  \caption{广告竞价过程示例}
+  \begin{center}
+    \begin{tabular}{c|c|c|c|c|c}
+      \hline
+      排序 & 出价 & 点击率 & eCPM & GSP定价 & VCG定价\\
+      \hline
+      1    & 1    & 2    & 3  & & \\
+      \hline
+      2    & 1    & 2    & 3  & &\\
+      \hline
+      3    & 1    & 2    & 3  & &\\
+      \hline
+      4    & 1    & 2    & 3  & &\\
+      \hline
+      5    & 1    & 2    & 3  & &\\
+      \hline
+      6    & 1    & 2    & 3  & &\\
+      \hline
+    \end{tabular}
+  \end{center}
+  \label{table_bid}
+\end{table}
+
+\section{广告网络系统架构}
+\begin{figure}\label{fig_adnet}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.65\textwidth]{AdNet.eps}
+}
+\caption{广告网络(Ad Network)系统架构示意}
+\end{figure}
+
+广告网络的典型系统架构如图\ref{fig_adnet}所示，其中广告投放的决策流程为：服务器接收前端用户访问触发的广告请求，首先根据上下文url和用户cookie从Page Attributes 和User Attributes系统中查出相应的上下文标签和用户标签；然后用这些标签，以及其他一些广告请求条件从广告索引中找到符合要求的广告候选集合；最后，利用CTR预估模型计算所有的广告候选的eCPM，再根据eCPM排序选出赢得竞价的广告，并返回给前端完成投放。
+
+从离线计算的流程来看，广告网络需要根据广告投放的历史展示和点击数据，对点击率预测进行建模。当然，实际的广告网络也往往需要同时提供受众定向的功能，因此这部分离线计算也需要进行。不过由于我们只给出最核心的功能块，因此没有特意强调这一部分。
+
+由于广告网络广泛采用点击计费，准实时的计费和点击反作弊功能是必不可少的。我们可以采用下一章中介绍的流式计算平台来完成这些准实时功能，并且将这些结果及时反馈到事实建索引的模块来保证广告的及时上下线。由于计费问题计算相对简单，我们不作展开介绍，而反作弊的思路将在本书最后一章有专门讨论。
+
+\section{广告检索}
+竞价广告市场中，大量中小广告主的参与，以及复杂的定向条件，对检索技术提出了更高的要求。倒排索引是搜索引擎的关键技术，而广告的检索上也采用这样的框架。但是广告的检索问题也有一些自身的特点和需求，我们需要讨论一下这些需求下一些专用的检索技术。在合约式广告系统中，广告主数目一般来说不算太大，因而采用一般的检索方案完全可以满足要求；然而在服务大量中小广告主的广告网络中，探讨高效且精准的检索技术，有非常切实的产品意义。
+
+第二章中介绍的基本倒排索引技术在广告问题上遇到了两个挑战：一是广告指定的定向条件组合，可以看成是一个由与或关系连接的布尔表达式，这样的布尔表达式的检索，很显然与上面搜索引擎对文本的“bag of words”假设不太一样；二是在上下文和用户兴趣信号比较丰富时，广告检索中的查询可能相当长，甚至会由上百个关键词组成，这种情况下的检索，也与搜索引擎之中主要由1-4个term 组成的query情形有区别：试想你把100个关键词同时输入到搜索框中，返回的结果会是你想要的么？根据这些切实的需求，我们来讨论一下在线广告系统中的检索技术。
+\subsection{布尔表达式的检索}
+广告检索与普通搜索引擎检索第一个不同，是布尔表达式的检索问题。在受众定向的售卖方式下，一条广告对象不能再被看成是a bag of words，他们应该是一些定向条件组合成的布尔表达式，如下面给出的一些例子：
+
+$a_1 = (\textrm{age} \in \{3\} \cap \textrm{geo} \in \{$北京$\}) \cup (\textrm{geo} \in \{$广东$\} \cap \textrm{gender} \in \{$男$\})$
+
+$a_2 = (\textrm{age} \in \{3\} \cap \textrm{gender} \in \{$ 女$\}) \cup (\textrm{geo} \notin \{$北京,广东$\})$
+
+$a_3 = (\textrm{age} \in \{3\} \cap \textrm{gender} \in \{$ 男$\} \cap \textrm{geo} \notin \{$广东$\}) \cup (\textrm{state} \in \{$ 广东$\} \cap \textrm{gender} \in \{$ 女$\})$
+
+$a_4 = (\textrm{age} \in \{3,4\}) \cup (\textrm{geo} \in \{$ 广东$\} \cap \textrm{gender} \in \{$男$\})$
+
+$a_5 = (\textrm{state} \notin \{$北京,广东$\}) \cup (\textrm{age} \in \{3,4\})$
+
+$a_6 = (\textrm{state} \notin \{$北京,广东$\}) \cup (\textrm{age} \in \{3\} \cap \textrm{state} \in \{$北京$\}) \cup (\textrm{state} \in \{$广东$\} \cap \textrm{gender} \in \{$男$\})$
+
+$a_7 = (\textrm{age} \in \{3\} \cap \textrm{state} \in \{$北京$\}) \cup (\textrm{state} \in \{$广东$\} \cap \textrm{gender} \in \{$ 女$\})$
+
+在这些例子中，我们用布尔表达式来表示广告的定向人群，并且写成析取范式(Disjunctive Normal Form, DNF)的形式。在这样的表达形式中，有两个概念要先做一下解释：一是每个DNF都可以分解成一个或多个conjunction的并，如$a_1$可以分解成$j_1 = (\textrm{age} \in \{3\} \cap \textrm{geo} \in \{$北京$\})$和$k_2 = (\textrm{geo} \in \{$广东$\} \cap \textrm{gender} \in \{$男$\})$这两个conjunction；二是每个conjunction又可以进一步分解为一个或多个assignment的交，以$c_1$为例，可以分解为$\textrm{age} \in \{3\}$和$\textrm{geo} \in \{$北京$\}$这样两个assignment。为了后文算法描述做准备，我们定义assignment、conjuction和DNF的数据结构如下：
+\begin{lstlisting}[language={C++}]
+struct Assignment
+{
+    bool in;    // `表示该assignment是属于还是不属于`
+    int label;  // `该assignment指定的标签类型`
+    vector<int> values; // `该assignment指定的标签取值集合`
+}
+
+typedef vector<Assignment> Conjunction;
+
+typedef vector<Conjunction> DNF;
+\end{lstlisting}
+
+布尔表达式检索的问题有如下的两个特点，是我们设计算法的重要依据：首先，当某次广告请求的定向标签满足某个conjunction时，一定满足包含该conjunction的所有广告，这说明我们只要对conjunction建立倒排索引，并加上一层conjunction $\rightarrow$ ad的辅助索引即可。其次，在conjunction的倒排索引中，有一项显而易见的直觉可以帮助我们减少计算。这一直觉即是：因此，令sizeof(query) 表示广告请求中的定向标签个数，而sizeof(conjunction)表示某conjunction中的含有``$\in$"的assignment 数目，当sizeof(query) $<$ sizeof(conjunction)时，该conjunction一定不满足该次请求。
+
+根据上述两个重要特点，我们可以设计出一个为布尔表达式检索定制的算法。该算法维护一个两层的倒排索引，即上面所说的conjunction和ad两层索引，后一个索引按照或的关系进行检索，而前一个索引有不太一样的结构，我们重点来看一下。在conjunction 的索引中，我们把每个conjuction 分解成一组(key, value) 对，例如将$\textrm{age} \in \{3, 4\}$分解成$\textrm{age} \in \{3\}$和$\textrm{age} \in \{4\}$两个term，这些term即是倒排索引的key，而``$\in$"和``$\notin$"操作符则放在倒排链表的具体元素上。利用到上文所说的assignment个数的约束，我们可以做的优化是将这一倒排索引按照sizeof(conjunction)分成若干部分，以提高检索效率。我们仍然以上文的一组广告为例来解释一下。这组广告的DNF可以按如下的方式分解成一些conjuctions：
+
+$a_1 = j_1 \cup j_4, a_2 = j_2 \cup j_6, a_3 = j_3 \cup j_7, a_4 = j_5 \cup j_4, $
+
+$a_5 = j_6 \cup j_5, a_6 = j_6 \cup j_1 \cup j_7,  a_7 = j_1 \cup j_7$
+
+其对应的倒排索引，也可以很容易地写成下面的形式：
+
+$j_1 \rightarrow \{a_1, a_6, a_7\}, j_2 \rightarrow \{a_2\}, j_3 \rightarrow \{a_3\}, j_4 \rightarrow \{a_1, a_4, a_7\},$
+
+$j_5 \rightarrow \{a_4, a_5\}, j_6 \rightarrow \{a_2, a_5, a_7\}, j_7 \rightarrow \{a_3, a_6\}$
+
+而conjunction的倒排索引，注意到所有conjunction中最大的size为2，我们可以将倒排索引分成三部分，每部分中所有的conjunction 其size都一样，按照这样的准则，最终形成的conjunction倒排索引应为下面的形式：
+
+\textrm{size} = 0: (geo, 北京) $\rightarrow \{(j_6, \notin)\}$, (geo, 广东) $\rightarrow \{(j_6, \notin)\}$, $Z \rightarrow \{(j_6, \in)\}$
+
+\textrm{size} = 1: (age, 3) $\rightarrow \{(j_5, \in)\}$, (age, 4) $\rightarrow \{(j_5, \in)\}$
+
+\textrm{size} = 2: (age, 3) $\rightarrow \{(j_1, \in), (j_2, \in), (j_3, \in)\}$, (geo, 北京) $\rightarrow \{(j_1, \in)\}$, (gender, 女) $\rightarrow \{(j_2, \in), (j_7, \in)\}$, (gender, 男) $\rightarrow \{(j_3, \in), (j_4, \in)\}$, (geo, 广东) $\rightarrow \{(j_3, \notin), (j_4, \in), (j_7, \in)\}$
+
+其中size为零的部分，包含哪些所有只有``$\notin$" 操作符的conjunctions。为了保证给定一个assignment，size为零的conjunctions 至少出现在一个倒排表中，算法引入$Z$为一个特殊的term，并且将所有size为零的conjunctions都放在其倒排表中，并赋以一个``$\in$"操作符。
+
+我们在第二章的标准倒排索引类基础上加以改进，将这样的DNF索引类的代码列在下面，方便大家参考。在这段代码中，indexDNF对应上面提到的DNF 的倒排索引，而indexConj对应于conjunction的一组倒排索引，其中每一个倒排索引中所有的conjunction都具有相同的size。需要注意的是，在查询函数当中，实际上的输入概念上应该是一个标签列表，而不是conjucntion，不过由于conjunction也可以用来表示一个标签列表，为了接口的一致性，我们还是用conjucntion 来作为输入参数。
+
+\begin{lstlisting}[language={C++}]
+class DNFIndex : public InvIndex<Conjunction> {
+  private:
+    vector<InvIndex<Assignment> > & indexConjs;
+
+  public:
+    void add(DNF & dnf) {
+        // `更新DNF索引`
+        InvIndex<Conjunction>::add(dnf);
+
+        // `遍历每个conjunction`
+        int numConj = dnf.size();
+        for (int c = 0; c < numConj; c ++) {
+            // `检查本conjunction是否已经被索引`
+            if (indexDNFsize == indexDNF.size())
+                continue;
+
+            // `计算conjunction的size，即其中属于操作符的个数`
+            int conjSize = 0, numAsgn = dnf[c].size();
+            for (int a = 0; a < numAsgn; a ++)
+                if (dnf[c][a].in) conjSize ++;
+
+            // `在size = conjSize的index中加入本conjunction`
+            if (indexConjs.size() <= conjSize())
+                indexConjs.resize(conjSize + 1);
+            add(indexConjs[conjSize], dnf[c], conjID);
+        }
+    }
+
+    void retrieve(Conjunction & exps, vector<int> & dnfIDs) {
+        // `只检查哪些size不大于表达式个数的conjunction索引`
+        int sizeCheck = min(exps.size(), indexConjs.size());
+        int numExp = exps.size();
+
+        // `依次检查各个conjunction索引`
+        for (int s = 0; s < sizeCheck; s ++) {
+            // `得到各个相关倒排链，并指向其第一个Entry`
+            vector<list<Entry>::iterator> pointers;
+            for (int e = 0; e < numExp; e ++) {
+                map<Assignment, list<Entry> >::iterator it;
+                it = indexConjs[k].find(exps[e]);
+                if (it == indexConjs[k].end())break;
+                pointers.push_back(it -> second.begin());
+            }
+
+            if (postings.size() < s)continue;
+
+            while (true) {
+                // `排序`
+                for (int l1 = 0; l1 < s - 1; l ++)
+                    for (int l2 = l1 + 1; l2 < s; l ++)
+                        if (pointers[l1].first > pointers[l2].first)
+                        SWAP(pointers[l1], pointers[l2]);
+
+                // `检查是否有符合要求的conjunction`
+                if (pointers[0] == pointers[s - 1]) {
+                    retrieve();
+
+                    for (int l = 0; l < s; l ++)
+                        pointers[l] ++;
+                }
+
+                // `每个倒排链向后滑动`
+                for (int l = 0; l < s - 1; l ++)
+                    while (pointers[l].first < pointers[s - 1].first)
+                        pointers[l] ++;
+            }
+        }
+    }
+};
+\end{lstlisting}
+媒体广告与搜索的检索技术，还有一点不太一样的地方，即在处理很多个term组成的query时的处理办法。我们考虑上下文定向的情形，当通过网页内容的关键词来匹配广告候选时，往往需要用十多个甚至几十个关键词去查询广告，再进行后续精细的排序。在这一情形下，如果仍然采用一般搜索引擎对query 的处理办法，则会陷入两难的境地：如果假设各个term之间是与的关系，基本上不可能得到任何匹配的结果；如果假设各个term之间是或的关系，那么在检索阶段就会返回大量相关性很差的候选，为后续排序制造极大的麻烦。
+
+解决这一问题的基本思路，是在检索阶段就引入某种评价函数，并按这一函数的评价结果来决定返回哪些候选。这一评价函数的设计有两个要求：一是合理性，即对最终排序的评价函数有直觉上合理的近似；二是高效性，即需要存在与倒排索引数据结构相契合的快速评价算法，否则就与在排序阶段展开计算没有差别了。简单来说，前人的研究发现，当我们选用一个线性函数(变量为各term)，且各变量的权重为正式，是可以构造出这样的快速评价检索算法的。我们将这样的线性函数定义为：
+
+\begin{equation}
+\textrm{score}(a, c) = \sum_{f \in \Omega(a) \cap \Omega(c)} \alpha_f v_f(a)
+\end{equation}
+其中$\Omega(a)$和$\Omega(c)$分别表示$a$和$c$上不为零的特征集合，而$v_f(a)$表示$f$这一特征在$a$广告上的贡献值。虽然常用的向量空间模型(Vector Space Model, VSM)不符合这一要求，但是如果不考虑余弦距离中的归一化分母，那么可以用这一线性函数在检索阶段做近似的预评估。这种情况下，$\alpha_f$即为关键词$f$在上下文中的TFTDF，而$v_f(a)$ 即为$f$ 在某广告$a$中的TFIDF。 虽然$\alpha_f$ 在不同的查询中取值不同，但在一次查询中是一组常数。
+
+\subsection{WAND算法}
+
+将线性评价函数计算过程加快的关键，在于使用两个上界：一是某个关键词$f$在所有文档上贡献值的上界，我们记为$ub_f$；二是某个文档中所有关键词的上界的和，也就是某篇文档对所有不同query的评价函数的上界，我们记为$UB_a$。 巧妙地利用这两个上界，可以在检索过程中排除掉大量不可能胜出的候选，从而达到快速评价的目的。这一方法，即为Andrei Broder等人提出的WAND(Weight AND)算法，也是上下文定向广告和内容推荐产品中非常实用的快速检索算法，我们以此算法为例看看长查询的检索过程。
+
+WAND检索算法用到的数据结构，除了一个标准的倒排索引，还有一个用于保存检索过程中Top-K结果的堆，基于这两个数据结构，以及在建索引过程中生成的$ub_f$ 和$UB_a$(这两个值的生成过程比较简单，因此我们略去相应的算法描述)，我们把WAND的检索算法用伪代码描述在下面。
+
+\begin{lstlisting}[language={C++}]
+class WANDIndex : public InvIndex<string> {
+  public:
+    void add(vector<string> & doc) {
+    }
+
+    void retrieve(vector<string> & query, vector<int> & docIDs) {
+        vector<string> terms = query;
+        int curDoc = 0;
+
+        vector<list<Entry> > posting;
+        for (int t = 0; t < terms.size(); t ++)
+            posting[t] = next(curDoc, 0.0f);
+    }
+
+ private:
+    void next(int & curDoc, float minScore) {
+        int numTerm = term.size();
+
+        // `按照倒排链中首个docID的升序对terms进行排序`
+        for (int t1 = 0; t1 < numTerm - 1; t1 ++)
+            for (int t2 = t1 + 1; t1 < numTerm; t2 ++)
+                if (posting[t1] > posting[t2]) {
+                    SWAP(terms[t1], terms[t2];
+                    SWAP(posting[t1]; posting[t2]);
+                }
+
+        // `找到pivot term，即使得累计的UB大于某个阈值的首个term`
+        float accUB = 0.0f;
+        for (int t = 0; t < numTerm; t ++)
+            if ((accUB += terms[t].UB) > theta)
+                break;
+
+        // `已经没有可以胜出的候选`
+        if (accUB < theta)break;
+        if (posting[t] == end())break;
+
+        if (pivot <= curDoc) {
+            // `该pivot已经被处理过，任选一个倒排链向后滑动`
+            int pos = rand() / RAND_MAX * t;
+            posting[pos] = pos.iterator.next(curDoc + 1);
+        }
+        else { // pivot > curDoc
+            if (posting[0] -> second == posting[t] -> second) {
+                // `[0..t]之间的当前项一致，成功找到一个候选`
+                curDoc = pivot;
+                return(curDoc, posting);
+            }
+            else {
+                // `不满足，从前面选一个倒排链向后滑动`
+                int pos = rand() / RAND_MAX * t;
+                posting[pos] = pos.iterator.next(pivot);
+            }
+        }
+    }
+}
+\end{lstlisting}
+
+\subsection{线性评价函数的意义}
+
+这里讨论的相关性检索技术，仅仅考虑了相关性评价函数为线性的情况。乍看起来，这一条件严格限制了评价函数的适用范围。然而，如果考虑到广告的排序模型经常采用广义线性模型的建模方法的话，线性评价函数的适用范围就会大大扩展。我们采用后文中提到的基于广义线性模型的CTR预侧模型，也同样可以套用此框架。
+\subsection{搜索广告的检索}
+
+\section{广告排序概述}
+
+在第二卷里，我们已经简要介绍了eCPM指标及其分解方法。为了对本章内容提纲挈领，我们有必要对这一重要内容再做一回顾。
+
+在竞价广告的环境下，需要根据eCPM 对广告进行排序。
+按照点击和转化两个发生在不同阶段的行为，eCPM可以分解成点击率和点击价值的乘积，eCPM的估计，主要就是点击率预测和点击价值估计两个任务：
+\begin{equation}
+r(a, u, c) = \mu(a, u, c) \cdot \nu(a, u)
+\end{equation}
+我们认为点击率$\mu$是广告三个行为主体的函数，而点击价值则是用户$u$和广告商$a$的函数。后一点的假设有近似之处，因为实际上媒体的来源会影响用户对广告信息的信任程度，但我们为了概念清楚起见忽略这一影响。
+
+在不同的市场环境下，具体的广告产品可能不需要对这两个量决都进行估计，而且估计要求的准确程度也有所区别：对于按CPC结算的广告网络，需要尽可能准确地估计$\mu$，和粗略地估计$\nu$；对于在广告网络中采买的交易终端，主要需要估计$\nu$；而对于DSP，则需要对两个都有较强的估计能力。我们将分别对这两部分估计的建模思路和方法做探讨，但是请大家注意，务必要根据实际的产品需求选择合适的建模方法。
+
+另外，在实际的广告产品中，有可能同时存在若干种计费方式，因此其eCPM估算过程也不尽相同，我们用下面的一小段代码来说明在各种计费方式并存的情况下完整的eCPM计算逻辑。对然这一逻辑较为简单，还是很有助于大家深入理解eCPM的分解对应着不同的市场分工这一原理。
+\begin{lstlisting}[language={C++}]
+enum BidMode{CPM, CPC, CPS};
+
+float calcu_eCPM(float bid, BidMode mode) {
+    switch (mode) {
+        case CPM:
+            return bid;
+        case CPC:
+            return predict_ctr() * bid;
+        case CPC:
+            return predict_ctr() * predict_click_value();
+    }
+}
+\end{lstlisting}
+
+广告的点击率估计与搜索里的排序问题有关联，但又有明显的不同：点击率估计不能像像搜索排序那样只要求结果排序的正确性。这一是因为点击率需要乘以bid才得到最后的排序，二是因为对一些需求方技术平台而言，需要尽可能准确地eCPM用于出价。因此，作为各种广告系统中通用的一项技术，点击率预测更适合被建模成回归(Regression)问题而不是排序问题。
+
+所谓点击率预测，很自然的可以想到基于统计的估计：
+\begin{equation}
+pctr \approx click/impression
+\end{equation}
+
+但如果一个广告从来没有被展示过，我们无法通过统计历史数据来预估未来的点击率，可以想到的解决方法是如果要展示的广告x和一个展示过的广告y类似，则可以预估x的点击率与y接近。如果将广告投影到特征空间做比较，则演化为即将介绍的点击率模型。
+
+ctr预估模型从实证主义的统计估计演进为基于模型的点击率数学模型，按模型的复杂程度大体可以分为非线性模型和线性模型，我们对这俩者中的经典代表模型逻辑回归和GBDT做一下简要的介绍，感兴趣的朋友们可以从中体会最优化算法和统计机器学习在点击率预测模型中的重要作用，进而为后续了解业界前沿的点击率模型打下一定的基础。
+
+\section{点击率预测模型:逻辑回归}
+
+点击率预测的目的，是在$(a,u,c)$组合与点击的概率之间建立函数关系，因此可以概念性地表示成下面的概率估计问题：
+\begin{equation}
+\mu(a,u,c) = p(h=1|a,u,c)
+\end{equation}
+
+由于$h$是个取值于$\{0, 1\}$的二元变量，我们很自然想到的基础方法是逻辑回归(Logistic Regression, LR)，即：
+\begin{equation}\label{LR}
+p(h=1|a, u,c)=\sigma(w^\top x(a, u, c))
+\end{equation}
+其中$x$表示$(a,u,c)$组合上的特征矢量，即前文所谈的受众定向的输出及其派生的其他特征；$w$为各特征的的加权系数，也就是此模型需要优化的参数；$w^\top x$ 这一线性模型的输出经过Logistic sigmoid函数映射到$(0, 1)$之间，此映射函数形式为：
+\begin{equation}
+\sigma(z) = \frac{1}{1 + e^{-z}}
+\end{equation}
+
+从方法上看，LR也是利用线性函数来解决非线性目标，属于线性分类器，认为数据在高维空间下线性可分。
+\begin{equation}
+\begin{aligned}
+p(h=1|a,u,c) & > p(h=0|a,u,c)  \\
+w^\top x(a, u, c) & > 0
+\end{aligned}
+\end{equation}
+
+\subsection{广义线性模型视角}
+
+当我们面对一个多自变量的回归问题，根据目标值的特性，将其概率分布表示成指数族家族形式，基本的线性单元通过各种映射函数(link function) 建立该线性单元和各种分布的响应变量的关系，这就是广义线性模型。
+
+对点击率预估，我们把点击事件($h$)看成一个二元取值的随机变量，那么其取值为真($\textrm{click} = 1$) 的概率就是点击率。因此，点击事件的分布可以写成以点击率$\mu$为参数的二项(Binomial) 分布：
+\begin{equation}\label{ctr}
+p(h) = \mu^h (1-\mu)^{1-h}
+\end{equation}
+
+可以推导，逻辑回归正是当目标值的分布服从Bernoulli分布时广义线性模型的一个特例，映射函数为$logit(p)=log(\frac{p}{1-p})$ 函数。因此，有关广义线性模型的性质和结论，也可以直接适用于LR 模型。
+
+通常采用极大似然估计来求解加权系数$w$，如何求解的优化方法在后续章节深入剖析:
+\begin{equation}
+\begin{aligned}
+l(w) = & \log p(D|w) \\
+     = & \sum_{i=1}^{n} \log p(y_i=1|x_i,w) + (1-y_i)\log p(y^i=0|x_i,w)
+\end{aligned}
+\end{equation}
+
+\subsection{最大熵视角}
+
+对LR模型的另一种解读，是把它看做最大熵模型在二分类问题下的特例。因此，我们在文献中看到用最大熵模型来预测点击率，与LR模型指的是同一类方法。最大熵模型的原理并不复杂，不要把鸡蛋放在一个篮子里就是最大熵原理的朴素解释。具体原则如下：
+
+1.满足已知训练数据上的约束条件(特征的期望分布与经验分布一致);
+\begin{equation}
+\sum_{x,y}\tilde{p}(x)p(y|x)f(x,y)=\sum_{x,y}\tilde{p}(x,y)f(x,y)
+\end{equation}
+
+2.关于未知分布最合理的推断就是在满足已知知识的前提下，不对未知做任何假设从而做出的最不确定的推断;
+\begin{equation}
+\begin{aligned}
+& H(p) = -\sum_{x,y}\tilde{p}(x)p(y|x)\log(p(y|x)) \\
+& p_* = \arg\max_p H(p)
+\end{aligned}
+\end{equation}
+
+引入拉详细格朗日乘子，将最大熵转化为无约束优化问题，我们会发现最大熵和最大似然在优化目标上的等价性。这种等价关系数学上的变换并不复杂，我们不在这里讨论。
+
+\subsection{基本优化算法}
+
+在基础知识准备一章中，我们已经简要介绍了最优化问题的定义和基础的优化方法，本章起我们将对逻辑回归这一特定模型在海量数据下如何完成工程实现给出较为细致的解答，以期读者能够领会最优化方法的重要性。在广告实践中，对海量的日志的分析决定了我们通常需要采用分布式计算框架来完成模型的训练求解，我们需要一个能够方便地在分布式计算框架下实现，在海量用户日志上完成训练的方法。
+
+由于LR模型不存在闭式解，其优化方法必然需要迭代进行。典型的map/reduce分布式计算框架下，由于磁盘被用作迭代之间的数据交换手段，迭代的次数直接决定着训练算法的效率。因此，在每个迭代中尽可能完成更复杂深入的运算，减少迭代次数，是此处的关键。这样的思路适用于LR模型训练，也适用于许多map/reduce下的需要迭代求解的机器学习算法。
+
+前文中说到LR模型可以视为最大熵模型的特例，最大熵模型的典型优化方法，比如IIS(Improved Iterative Scaling)也曾经被用于LR的更新。这种方法虽然物理意义明确，计算简单，却有着收敛速度慢的致命弱点。在目标函数可导的一般优化问题中，拟牛顿法是一族最常用的方法，因此也可以直接应用于LR 问题的求解，下面我们简要回顾一下拟牛顿法。
+
+牛顿法具有收敛快的特性，严格凸二次函数只一次迭代，但求解时却有着更新不稳定的问题,如Hessian矩阵可能奇异导致无法求逆确定后继点，非正定无法保证下降方向。拟牛顿法迭代的构造Hessian矩阵的逆矩阵的近似，来解决牛顿法的更新稳定性问题。当构造的校正矩阵形如$\Delta H_k = \alpha_k u_ku_k^T+\beta_k(v_ku_k^T+u_kv_k^T)$时，即经典的BFGS方法。BFGS方法在收敛性质和数值计算方面稳定，且仅需一阶导数，不必计算hessian矩阵的逆矩阵。如下附上BFGS迭代求解的代码片段。
+\begin{lstlisting}[language={C++}]
+
+SparseVector s = new SparseVector();
+SparseVector y = new SparseVector();
+double fx0 = f.eval(x0);
+SparseVector dfx0 = df.eval(x0);
+int iter_num = 0;
+while(iter_num < MAX_ITER_NUM && dfx0.norm_2() > TOL) {
+    iter_num++;
+    //`计算搜索方向和步长`
+    d = H.multiply(dfx0).scale(-1.0);
+    fxt = lineSearch.search(f, df, x0, dfx0, fx0, d, xt, dfxt);
+    s = xt.minus(x0);
+    y = dfxt.minus(dfx0);
+
+    //`迭代更新Hessian矩阵，只存储下三角部分`
+    SparseVector tmp = H.multiply(y);
+    double rho = 1.0 / y.dot(s);
+    double tmp2 = tmp.dot(y) * rho * rho + rho;
+    for(int i = 0; i < H.size1(); ++i) {
+        for(int j = 0; j <= i; ++j) {
+            double t = -rho * (s.getValue(i) * tmp.getValue(j) + s.getValue(j) * tmp.getValue(i)) + tmp2 * s.getValue(i) * s.getValue(j);
+            H.setValue(i, j, H.getValue(i, j) + t);
+        }
+    }
+
+    //`进入下一轮迭代`
+    x0.swap(xt);
+    dfx0.swap(dfxt);
+    fx0 = fxt;
+}
+\end{lstlisting}
+
+从上述代码片段中可以看出，BFGS需要存储Hession矩阵的逆矩阵的近似 $H_k$，这个矩阵一般来说是稠密的，因此空间复杂度为$O(N^2)$。虽然BFGS 方法可以用近似Hession 的方案来解决更新稳定性问题，但在动辄过亿维度的高维空间建模中，Hession矩阵的尺寸过大，以至于根本无法在内存中存放。
+
+解决这一问题的思路，是仅仅保留最近几次更新的一些状态矢量，然后利用这些状态矢量和当前的梯度，直接计算出更新方向，这种方法，我们称之为L-BFGS(Limited-memory BFGS)。L-BFGS 的核心思想，是根据前几次的函数值变化和梯度变化来近似地拟合Hession 矩阵的逆。我们先来回顾一下，在BFGS 的迭代过程中，如果用$s_k=x_{k+1}-x_k$为前后两次自变量的变化值，$y_k=\nabla_{k+1}-\nabla_k$表示前后两次梯度的改变值，则Hession矩阵的更新公式可以表示为：
+\begin{eqnarray}
+H_{k+1} = \left(I - \frac{s_k y_k^\top}{y_k^\top s_k}\right)H_k\left(I - \frac{y_k s_k^\top}{y_k^\top s_k}\right)+ \frac{s_k s_k^\top}{y_k^\top s_k} = V_k^\top H_k V_k + \rho_k s_k s_k^\top
+\end{eqnarray}
+其中$\rho = 1 \big/ y_k^\top s_k$，$V_k = (I - \rho s_k y_k^\top)$。如果对此迭代公式展开并做截断，只保留前$m$次的状态量，则其近似方式可以表示成下式：
+\begin{eqnarray}
+H_k = (V_{k-1}^\top \cdots V_{k-m}^\top)H_k^0(V_{k-m} \cdots V_{k-1})+\rho_{k-m}(V_{k-1}^\top \cdots V_{k-m+1}^\top)s_{k-m}s^\top_{k-m}(V_{k-m+1} \cdots V_{k-1})\nonumber\\
++\rho_{k-m+1}(V_{k-1}^\top \cdots V_{k-m+2}^\top)s_{k-m}s^\top_{k-m}(V_{k-m+2} \cdots V_{k-1})+\cdots+\rho_{k-1}s_{k-1}s_{k-1}^\top
+\end{eqnarray}
+其中$V_k = I - \rho_k y_k s_k^\top$，而$H_0$是在首次迭代时设定的Hession逆的初值，为降低计算复杂度，实际中比较有效的选择是令其为一个对角阵：$H_k^0 = \gamma_k I$，其中
+\[
+\gamma_k = \frac{s_{k-1}^Ty_{k-1}}{y_{k-1}^Ty_{k-1}}
+\]
+在这样的表示下，$H_k$ 是可以在每次迭代中高效率地计算出来的。如下附上LBFGS迭代求解的代码片段。
+\begin{lstlisting}[language={C++}]
+SparseVector LBFGSLoop(SparseVector q,LinkedList<SparseVector> s,LinkedList<SparseVector> y,LinkedList<Double> rho) {
+    if(s.isEmpty()) {
+    return q;
+    }
+    else {
+        Iterator<SparseVector> iter1 = s.descendingIterator();
+        Iterator<SparseVector> iter2 = y.descendingIterator();
+        Iterator<Double> iter3 = rho.descendingIterator();
+        ListIterator<SparseVector> it1 = s.listIterator(0);
+        ListIterator<SparseVector> it2 = y.listIterator(0);
+        ListIterator<Double> it3 = rho.listIterator(0);	
+        LinkedList<Double> alpha = new LinkedList<Double>();
+        while(iter1.hasNext()) {
+            double tmp = iter3.next() *  q.dot(iter1.next());
+            q.plusAssign(-tmp, iter2.next());
+            alpha.addFirst(tmp);
+        }
+        double tmp = s.getLast().dot(y.getLast()) / y.getLast().dot(y.getLast());
+        SparseVector r = q.scale(tmp);	
+        while(it1.hasNext()) {
+            double beta = it3.next() * r.dot(it2.next());
+            r.plusAssign(alpha.pollFirst() - beta, it1.next());	
+        }
+		return r;
+	}
+}
+
+LinkedList<SparseVector> s = new LinkedList<SparseVector>();
+LinkedList<SparseVector> y = new LinkedList<SparseVector>();
+LinkedList<Double> rho = new LinkedList<Double>();
+double fx0 = f.eval(x0);
+SparseVector dfx0 = df.eval(x0);
+int iter_num = 0;
+while(iter_num < MAX_ITER_NUM && dfx0.norm_2() > TOL) {
+    iter_num++;
+    //`计算搜索方向和步长`
+    q.assign(dfx0);
+    d.assignTmp(LBFGSLoop(q,s,y,rho).scale(-1.0));
+    fxt = lineSearch.search(f, df, x0, dfx0, fx0, d, xt, dfxt);
+
+    //`更新最近m轮状态矢量列表s,y`
+    if(m >= M) {
+        s.pop();
+        y.pop();
+        rho.pop();
+    }
+    ++m;
+    s.add(xt.minus(x0));
+    y.add(dfxt.minus(dfx0));
+    rho.add(1.0 / y.getLast().dot(s.getLast()));
+
+    //`进入下一轮迭代`
+    x0.swap(xt);
+    dfx0.swap(dfxt);
+    fx0 = fxt;
+}
+\end{lstlisting}
+
+可以很容易验证，上面每一步迭代的空间和时间复杂度都降低到了$m \times N$，如果我们选择一个比较小的$m$，就可以认为其复杂度接近线性，这在大多数较高维度特征空间上建模的应用中就可以达到实用水平了。在迭代的前$m-1$步，L-BFGS和BFGS是没有区别的。
+
+除了L-BFGS，信任域方法(Trust-region)也被证明对解LR问题很有效，而且往往可以更快地收敛。关于Trust-region方法在LR模型上的应用以及实际应用中的收敛特性，我们在下一节中介绍。
+
+\subsection{信任域法}
+信任域法是个相对于线搜索方法对偶的优化算法框架，在广泛得到应用的开源实现liblinear中被采用，每一轮内层迭代采用共轭梯度法逼近求解一个约束优化子问题，与上一节中说到的lbfgs 方法相比，每一轮迭代的代价增加了，但总体的迭代数目更少，所以往往可以更快的收敛。
+
+梯度下降法，牛顿法，拟牛顿法，共轭梯度法都属于线搜索方法。它们的共同特点是在当前迭代点$x^k$处寻找下一个迭代点$x^{k+1}$ 时，首先确定一个下降方向：梯度下降法使用的是负梯度方向$- \nabla f(x^k)$；牛顿法使用的是牛顿方向$-[\nabla^2 f(x^k)]^{-1}\nabla f(x^k)$； 拟牛顿法使用的是拟牛顿方向$-H_k\nabla f(x_k)$；共轭梯度法使用的是共轭方向。然后沿着这个下降方向进行一维线搜索。这种搜索策略可以概括为先方向，后步长。
+
+信赖域(Trust-Region)法使用一种不同的搜索策略，其基本思想是：每次迭代时，限制在$x_k$ 的一个可信球形邻域里直接搜索$x_{k+1}$，同时决定下次迭代的方向和步长，如果当前可信域内找不到后继点，则缩小信任域范围。 记位移$d = x^{k+1} - x^k$，这即是要求搜索空间为 $\Vert d \Vert_2^2 \le \Delta_k$，称$\{x : \Vert x - x^k \Vert_2^2 \le \Delta_k\}$为置信域，$\Delta_k$为置信半径。另一方面，我们用一个模型函数$m_k(d)$来近似原来的目标函数$f(x_k + d)$。 模型函数通常取为二次函数：
+\[
+m_k(d) = f(x_k) + \nabla f(x_k)^T d + \frac{1}{2}d^T H_k d
+\]
+其中 $H_k$ 为 $f$在 $x^k$处的Hession矩阵或其一个近似。当$H_k = \nabla^2 f(x^k)$ 时，$m_k(d)$即是$f$在$x^k$处的二阶泰勒展开。当$f$满足一定的光滑条件时，模型函数和原来的目标函数在$x^k$ 的一个小邻域内的误差比较小，因此我们可以通过寻找模型函数在置信域中的最小点来寻找$f$的改进点。具体的说，每一次迭代需要解决下面形式的子问题：
+\begin{equation}
+\begin{aligned}
+\min \quad &f(x_k) + \nabla f(x_k)^T d + \frac{1}{2}d^T H_k d \\
+s.t.\quad  &\Vert d \Vert_2^2 \le \delta_k
+\end{aligned}
+\label{TRON_SUBPLOBLEM}
+\end{equation}
+
+为了实现信赖域搜索策略，还需要明确:一、置信半径的选取；二、子问题\ref{TRON_SUBPLOBLEM}的求解。子问题\ref{TRON_SUBPLOBLEM} 是一个目标函数为二次函数的约束优化问题，在liblinear中采用共轭梯度的近似解来逼近求解，具体细节将在后续介绍，这里先介绍怎样选择合适的置信半径。一般的策略是比较模型函数和目标函数的下降量：
+\[
+\rho_k = \frac{f(x^k) - f(x^k + d)}{m_k(0) - m_k(d)}
+\]
+如果$\rho_k \le 0$，说明目标函数值没有改进；若模型函数较真实的逼近了目标函数，我们期望$\rho_k$的值接近与1；如果$\rho_k$ 的值较小，说明在当前置信域内，模型函数和目标函数差别较大，需要缩小当前的置信区域；如果$\rho_k$ 的值较大，可以在下次迭代时适当伸长收敛半径。我们以liblinear里的开源代码为例，附上Trust Region算法主流程的代码片段：
+\begin{lstlisting}[language={C++}]
+//`控制是否更新迭代的参数`
+double eta1 = 0.25, eta2 = 0.75;
+//`控制置信半径条件的参数`
+double sigma1 = 0.25, sigma2 = 0.5, sigma3 = 4;
+f = fun_obj.fun(w);
+fun_obj.grad(w, g);
+delta = euclideanNorm(g);
+double gnorm1 = delta;
+double gnorm = gnorm1;
+for(int iter=1; iter <= max_iter; iter++) {
+    //`直接求解子问题得到位移s`
+    cg_iter = trcg(delta, g, s, r);
+    System.arraycopy(w, 0, w_new, 0, n);
+    daxpy(one, s, w_new);
+    //`模型函数的预估下降量和目标函数的真实下降量`
+    gs = dot(g, s);
+    prered = -0.5 * (gs - dot(s, r));
+    fnew = fun_obj.fun(w_new);
+    actred = f - fnew;
+    //`初始化第一轮迭代的置信半径`
+    snorm = euclideanNorm(s);
+    if (iter == 1) delta = Math.min(delta, snorm);
+    //`根据目标函数是否逼近模型函数，缩放下一步迭代的置信域半径`
+    if (fnew - f - gs <= 0)
+        alpha = sigma3;
+    else
+        alpha = Math.max(sigma1, -0.5 * (gs / (fnew - f - gs)));
+    if (actred < eta0 * prered)
+        delta = Math.min(Math.max(alpha, sigma1) * snorm, sigma2 * delta);
+    else if (actred < eta1 * prered)
+        delta = Math.max(sigma1 * delta, Math.min(alpha * snorm, sigma2 * delta));
+    else if (actred < eta2 * prered)
+        delta = Math.max(sigma1 * delta, Math.min(alpha * snorm, sigma3 * delta));
+    else
+        delta = Math.max(delta, Math.min(alpha * snorm, sigma3 * delta));
+    //`进入下一轮迭代`
+    if (actred > eta0 * prered) {
+        System.arraycopy(w_new, 0, w, 0, n);
+        f = fnew;
+        fun_obj.grad(w, g);
+        gnorm = euclideanNorm(g);
+        if (gnorm <= eps * gnorm1) break;
+    }
+}
+\end{lstlisting}
+
+如上所述，在$x^k$ 的一个小的置信邻域内，我们用一个二次正定函数近似原来的目标函数，认为俩者误差比较小，因此我们可以通过寻找模型函数在置信域中的最小点来寻找$f$的改进点。
+
+在trust region的算法框架下，置信域中子问题的求解是相对lbfgs 中的单步迭代来说更为复杂的任务，我们希望该子问题的求解能够以尽量小的代价完成该任务，使得整体的迭代性能良好。在开源实现liblinear中，即采用了共轭梯度法来近似求解的高效方案。和无约束优化中的共轭梯度法略有不同的是，这里需要满足$\Vert d \Vert_2^2 \le \delta_k$的约束条件，考虑到子算法中位移量是递增的，即$\Vert s^i \Vert \le \Vert s^{i+1} \Vert$，我们在位移量超出置信域的该轮内迭代中，将位移的步长受限在置信域即可。
+
+对于目标函数为二次正定函数$f(x) + \nabla f(x)^T d + \frac{1}{2}d^T H d$时，共轭梯度法可以在一组关于$H$ 共轭的向量组上做简单的n 次迭代后达到收敛，避免了需要存储和计算$H$ 矩阵的缺点，这意味着不用直接计算和存储Hessian 矩阵，这无疑是非常吸引人的。具体来说，每次迭代中的主要操作是Hessian矩阵与向量s的乘积，由于X是稀疏的，数据量不是特别大时不需要直接求Heiisan矩阵也可以得到该乘积:
+\[
+Hessian.d=(I+CX^TDX)d=d+C.X^T(D(Xd))
+\]
+
+仍以liblinear里的开源代码为例，附上子问题求解的代码片段：
+\begin{lstlisting}[language={C++}]
+double[] d = new double[n];
+double[] Hd = new double[n];
+double rTr, rnewTrnew, cgtol;
+//`初始化位移0，方向d=-g`
+for (int i = 0; i < n; i++) {
+    s[i] = 0;
+	r[i] = -g[i];
+	d[i] = r[i];
+}
+cgtol = 0.1 * euclideanNorm(g);
+rTr = dot(r, r);
+while (true) {
+	if (euclideanNorm(r) <= cgtol) break;
+	//`矩阵乘法计算Hd`
+	fun_obj.CalHd(d, Hd);
+	//`计算步长`
+	double alpha = rTr / dot(d, Hd);
+	daxpy(alpha, d, s);
+	if (euclideanNorm(s) > delta) {
+        //`到达置信域外，重新计算步长约束位移`
+        reCalS(alpha, d, s);
+        break;
+	}
+	//`计算方向`
+	alpha = -alpha;
+	daxpy(alpha, Hd, r);
+	rnewTrnew = dot(r, r);
+	double beta = rnewTrnew / rTr;
+	scale(beta, d);
+	daxpy(one, r, d);
+    rTr = rnewTrnew;
+}
+\end{lstlisting}
+
+\subsection{ADMM计算框架}
+从上节中置信域方法与拟牛顿法的比较中，我们可以看到，随着每轮迭代的代价增加，迭代次数也随之降低了，因此有可能会带来收敛速度的提升。是否存在一种普适性的思路，使得我们可以对一般的迭代求解问题减少其迭代次数呢？在互联网大规模数据处理的挑战诞生以后，学术界对这个问题也进行了深入的研究，产生了一些颇具启发意义得方法。这里我们介绍一种称为Alternative Directional Method of Multipliers (ADMM)的计算框架。
+
+从方法论上说，要降低迭代数目，必然要求在一个迭代内部完成更复杂的计算。要了解ADMM，需要先介绍一下扩展拉格朗日(Augmented Lagrangian) 的方法。在第二章中，我们介绍了带约束优化的拉格朗日，如果只考虑等式约束为一个线形约束($Ax = b$)的形式，我们可以构造如下的扩展拉格朗日：
+\begin{equation}\label{augment}
+L_\rho(x, y)= f(x) + y^\top (Ax - b) + \frac{\rho}{2}\|Ax - b\|_2^2
+\end{equation}
+可以很容易地验证，这一形式可以得到与标准拉格朗日一样的解。引入一个二阶惩罚项，往往会使得问题求解的过程更好地收敛。根据\cite{Boyd2} 中的介绍，这一问题可以用dual acsent方法求解。而问题得以分布式求解的关键，是当目标函数可以分解成下面的形式时，可以发现存在有效的分解迭代求解方案：
+\begin{eqnarray}\label{decomp}
+\min & f(x) + g(z) \nonumber \\
+\textrm{s.t.} & Ax + Bz = c
+\end{eqnarray}
+对应的迭代求解方案，是一个$x, z, y$依次迭代更新的过程：
+\begin{eqnarray}
+x_{k+1} &\leftarrow& \arg\min_x \left(f(x) + (\rho/2)\|Ax + Bz_k - c + s_k\|_2^2\right)\nonumber \\
+z_{k+1} &\leftarrow& \arg\min_z \left(g(z) + (\rho/2)\|Ax_{k+1} + Bz - c + s_k\|_2^2\right)\\
+s_{k+1} &\leftarrow& s_k + Ax_{k+1} + Bz_{k+1} - c\nonumber
+\end{eqnarray}
+其中我们为了表达上的整洁，我们将$y$换成了其归一化的形式$s=(1/\rho)y$。在许多典型的利用ADMM分布式求解的问题当中，上面的第一个公式用于各部分数据的局部参数更新，第二个公式用于将各部分得到的局部优化参数综合成全局的参数；而第三个公式中对对偶变量的更新则是使得整个过程稳定和高效率的关键。我们可以结合LR问题的具体情况，来解释一下利用ADMM方法分布式求解的过程。
+
+按照公式\ref{decomp}的结构，我们可以将LR的优化问题\ref{LR}做一些改写，使之变成能更方便地利用ADMM 进行分布式更新的形式：
+\begin{eqnarray}\label{decomp}
+\min & \sum_{i=1}^N \sigma(F^{(i)} x^{(i)}) + r(z) \nonumber \\
+\textrm{s.t.} & x^{(i)} - z = 0, \quad i = 1, \cdots, N
+\end{eqnarray}
+这里的$i=\{1,\cdots,N\}$表示数据集分裂后的的各个部分，$x^{(i)}$对应于某一部分数据上得到的LR参数(对应于上面ADMM问题里的$x$)，而$z$为整体决策后的参数。$F^{(i)}$ 表示由第$i$块数据个样本的特征拼成的矩阵。问题的约束条件是表明求解收敛时各部分的参数应该等于整体参数，这是非常自然需要满足的。目标函数里的$r(z)$ 代表的是求解过程的对参数的某种regularization项，比如参数矢量的$L_1$-norm或$L_2$-norm。这一问题与上述的ADMM问题显然是一致的，因此，我们可以得到用ADMM方法迭代求解此问题的方法：
+\begin{eqnarray}
+x^{(i)}_{k+1} &\leftarrow& \arg\min_{x^{(i)}} \left(\sigma(F^{(i)} x^{(i)}) + (\rho/2)\|x^{(i)} - z_k + s^{(i)}_k\|_2^2\right)\nonumber \\
+z_{k+1} &\leftarrow& \arg\min_z \left(r(z) + (N\rho/2)\|z - \overline{x}_{k+1} - \overline{s}_k\|_2^2\right)\\
+s^{(i)}_{k+1} &\leftarrow& s^{(i)}_k + x^{(i)}_{k+1} - z_{k+1}\nonumber
+\end{eqnarray}
+我们来仔细分析一下这一更新的过程：1. 首先，在每个数据分块上，分别执行第一个公式中的对应更新，得到该数据分块上更新后的参数，这一步是可以分布式进行的，而且各个数据块之间是不需要进行通信的；2. 然后，根据各部分更新得到的参数，执行第二个公式得到综合以后的整体参数$z$；3. 根据第三个公式更新对偶变量$s$，并将更新后的$z$和$s$分发至各个数据块的处理单元。这一过程可以非常自然地用map/reduce方式来实现，其中1步骤对应着各个mapper，而2和3步骤对应着一个唯一的reducer。
+
+在map/reduce的分布式计算框架下，ADMM方法对于效率的提高往往有较好的效果。我们可以将此过程与L-BFGS 的迭代的更新过程比较一下，从而更深入地理解这一加速的概念性原理。在L-BFGS 当中，每个mapper，即分布式的部分计算过程非常简单，只需要在每个样本上都参数求导数，再将导数累加即可。而在ADMM方法中，mapper 计算的过程变得复杂了很多，由简单的导数计算变成了一个LR 的求解问题，也就是说mapper 的计算本身就需要迭代才可以完成。可以直观地这样认为，由于在每个mapper中作了更多的计算工作，使得整体求解过程的收敛更快。同时需要注意的是，实际上在每个mapper 中复杂的更新过程并不会带来mapper计算代价的显著增加，这是由于每个mapper 所需要处理的数据量有限，因此可以放在内存中，于是在分布式计算中最主要的开销即I/O开销并没有增加。因此，可以认为ADMM 的方法是用局部内存的更多的访问换得了全局map/reduce 过程的迭代次数减少，从而提高了效率。
+
+我们还是以LR模型为例来介绍ADMM方法在Hadoop中实现的代码片段。
+先介绍上述步骤一：在每个数据分块上，分别执行第一个公式中的对应更新，得到该数据分块上更新后的参数。即在Hadoop的map阶段，每个mapper中采用lbfgs求解该数据分块上更新的参数。
+\begin{lstlisting}[language={C++}]
+//`每个mapper中处理的split数据按InstancesWritable格式放在内存中`
+public void map(LongWritable key, InstancesWritable value, Context context) throws IOException, InterruptedException {
+    FileSplit split = (FileSplit) context.getInputSplit();
+    String splitId = key.get() + "@" + split.getPath();
+    splitId = AdmmIterationHelper.removeIpFromHdfsFileName(splitId);
+    AdmmMapperContext mc;
+    //`读取上轮迭代reduce中更新后的参数分发至各个数据块的处理单元。`
+    if (iteration == 0) {
+        mc = new AdmmMapperContext(rho);
+    }
+    else {
+        mc = assembleMapperContextFromCache(splitId);
+    }
+    //`采用lbfgs,在上轮迭代的XInitial基础上增量更新XUpdate`
+    Admm admm = new Admm(value,mc.getSInitial(),mc.getZInitial(),mc.getRho(),1.0);
+    LBFGS lbfgs= new LBFGS();
+    SparseVector XUpdate = new SparseVector(mc.getXInitial());
+    double local_loss = lbfgs.minimize(admm, XUpdate);
+
+    AdmmReducerContext reducerContext = new AdmmReducerContext(
+        mc.getSInitial(),
+        mc.getXInitial(),
+    	XUpdate,
+        mc.getZInitial(),
+        local_loss,
+        mc.getRho(),
+        regularizationFactor);
+    //`将各部分更新得到的参数汇总至reduce，更新z和s`
+    context.write(ZERO, new Text(splitId + "::" + AdmmIterationHelper.admmReducerContextToJson(reducerContext)));
+}
+\end{lstlisting}
+
+reduce阶段对应着整体参数$z$和对偶变量$s$的更新。
+\begin{lstlisting}[language={C++}]
+public void reduce(IntWritable key, Iterator<Text> values, Context context) throws IOException,InterruptedException {
+    //`将各部分更新得到的参数汇总`
+    AdmmReducerContextGroup rcontext = new AdmmReducerContextGroup(values, numberOfMappers, LOG, iteration);
+    //`根据s和更新后的x更新z`
+    SparseVector zUpdated = getZUpdated(rcontext);
+    SparseVector[] xUpdated = rcontext.getXUpdated();
+    String[] splitIds = rcontext.getSplitIds();
+    
+    for (int mapperNumber = 0; mapperNumber < context.getNumberOfMappers(); mapperNumber++) {
+        //`根据更新后的x和z更新s`
+        SparseVector sUpdated = getSUpdated(rcontext, mapperNumber, zUpdated);
+        //`将更新后的各参数写入字典`
+        AdmmMapperContext admmMapperContext =
+        new AdmmMapperContext(sUpdated, xUpdated[mapperNumber], zUpdated,
+            rcontext.getRho() * rcontext.getRhoMultiplier(),
+            rcontext.getLambda(), rcontext.getPrimalObjectiveValue(),
+            rcontext.getRNorm(), rcontext.getSNorm());
+        String currentSplitId = splitIds[mapperNumber];
+        outputMap.put(currentSplitId, AdmmIterationHelper.admmMapperContextToJson(admmMapperContext));
+    }
+    //`将参数字典写入hdfs供下轮迭代读取`
+    context.write(ZERO, new Text(AdmmIterationHelper.mapToJson(outputMap)));
+    if (rcontext.getRNorm() > THRESHOLD || rcontext.getSNorm() > THRESHOLD) {
+        context.getCounter(IterationCounter.ITERATION).increment(1);
+    }
+}
+//`更新z`
+private SparseVector getZUpdated(AdmmReducerContextGroup context) {
+    int numMappers = context.getNumberOfMappers();
+    SparseVector xAverage = context.getXUpdatedAverage();
+    SparseVector sAverage = context.getSInitialAverage();
+    SparseVector zUpdated = new SparseVector();
+    double zMultiplier = (numMappers * context.getRho()) / (2 * context.getLambda() + numMappers * context.getRho());
+    //`对Z的二次函数求极小值`
+    zUpdated = xAverage.add(sAverage).scale(zMultiplier);
+    return zUpdated;
+}
+//`更新s`
+private SparseVector getSUpdated(AdmmReducerContextGroup context, int mapperNumber, SparseVector zUpdated) {
+    SparseVector sInitial = context.getSInitial()[mapperNumber];
+    SparseVector xUpdated = context.getXUpdated()[mapperNumber];
+    SparseVector sUpdated = new SparseVector();
+    sUpdated = sInitial.add(xUpdated).minus(zUpdated);
+    return sUpdated;
+}
+\end{lstlisting}
+
+虽然我们在这里是以LR模型为例来介绍ADMM方法的应用，实际上这种方法可以应用于许多常见的机器学习模型，而且大都在map/reduce 的计算框架下可以达到减少总迭代次数，从而提高效率的目的。对于优化方法的选择，实际上没有免费的午餐，ADMM对效率的提高也主要适用于map/reduce这种迭代的开销非常高的计算框架中。
+
+\subsection{点击率模型的校正}
+
+点击率预测问题有一个数据上的挑战，就是正例和负例样本严重不均衡，特别是在显示广告点击率只有千分之几的情况下。在很多建模方法中，这样严重的不均衡会带来模型估计上的问题，我们仍然以LR模型为例，来讨论一下模型存在偏差的原因，以及相应的校正方法。
+
+\begin{figure}\label{fig_rare}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.3\textwidth]{rare.eps}
+}
+\caption{正负例样本不均衡时点击率模型存在偏差的原因示意}
+\end{figure}
+
+我们可以通过图\ref{fig_rare}来示例性地描述点击率模型可能存在偏差的原因。假设我们分别用两个高斯分布来描述click=0和click=1 情形下的特征分布。熟悉统计的读者都知道，高斯分布方差的最大似然估计是有偏的(为了得到方差的无偏估计，我们需要将样本数目减去1来计算方差)，而这一偏差的方向是对方差有所低估，并且样本数目越少，低估越严重。由于click=1时的数据数量远远小于click=0时的数据数量，对前者的方差低估就会更严重，对应图\ref{fig_rare} 所示，前者的分布(右侧的高斯)会变得更窄一些。加入我们用这两个最大似然估计的高斯分布来决定click=0和click=1 两个类的边界点，就会出现比实际边界点向右偏移的情况。这也就意味着更多的样本被分到了click=0这个类中，或者说意味着点击率将会被系统性地低估一些。这里的解释虽然只是示意性的，却与LR模型里点击率估计有偏的原理基本一致。
+
+幸运的是，消除这一点击率估计的偏差并不困难，这是因为这一偏差是可以计算出来，并且存在闭式解的！实际上对这一偏差的系统性分析可以上升到GLM 的层次来研究，而文*中也对LR情形下的具体情况进行了深入讨论。简单来说，LR模型的最大似然估计存在的偏差可以表示成下面的形式：
+\begin{equation}
+\textrm{bias}(w) = (X^\top W X)^{-1}X^\top W\xi
+\end{equation}
+上式中，$W = \textrm{diag}\{\pi_i (1-\pi_i) w_i\}$，其中$\pi_i = (1 + e^{-w^\top f_i})^{-1}$；$X=(x_1 \cdots x_N)$表示所有样本特征组成的矩阵；
+
+
+\section{点击率模型举例:GBDT}
+
+\subsection{点击率预测特征}
+
+点击率预测问题的挑战主要在于如何使模型能捕捉高度动态的市场信号，以达到更准确的预测。这一挑战可以用在线的模型学习算法，或者用快速更新的动态特征来解决，从方法论上说，这两种思路是对偶的，我们会作对比介绍，但重点放在第二种思路，因为其工程扩展性更强。从计算角度来说，另一个挑战是如何在海量的日志数据上快速有效地完成训练迭代，这也将是我们讨论的重点。
+
+上一节主要讨论的是点击率预测模型侧的问题，这一节我们来看看特征侧的技术。从受众定向得到的所有$f(a, u, c)$，以及这些特征的运算，可以组合出大量的特征供模型选择，这是大多数机器学习问题共同的方法。这样的特征生成方法，是点击率预测特征的基础方法，不过在广告这样的问题里也遇到一些挑战：一是组合特征数量可能巨大，使得模型的参数数目也非常大，工程上参数更新和在线计算都需要比较高效的设计；二是模型动态性的本质要求参数快速更新，而在多台ad server之间协同进行online learning并非一件易事。
+
+\subsubsection{点击率特征的构成}
+
+为什么广告展示的决策可以提取出大量的特征呢？这是因为在$(a,u,c)$三个维度上，都存在着人为指定或机器生成的多种标签，这些标签有的相互独立，也有的存在一定的层级关系。比如以$a$上的标签为例，我们在一般的广告运营当中，将广告维度上的标签分成广告主(Advertiser)、广告活动(Campaign)、广告组(Ad Group)、广告创意(Creative)这几个层次。在预测的过程中，这样的层级结构对于我们更稳健地估计某个广告，特别是新广告的点击率有非常大的帮助。
+
+\subsubsection{静态与动态特征}
+
+在机器学习问题中，有一项很重要的方法论，即某项模型侧的技术，一般都可以找到特征侧的对偶方案。那么如何设计特征方案使得模型快速演进的需求变得不那么迫切呢？当然就是让特征变成快速演进的！我们考虑上面所介绍的特征，假设某个组合用户性别标签为男性，上下文为体育页面，广告候选为运动服装，那么{运动服装，男性，体育}这样的一个标签组合会被激活，在模型训练中，这个特征的值就被设置为1，这个1永远都是确定的，我们把这样的特征叫做静态特征。如何才能让这个特征“动”起来呢？办法也很简单：当这样一个组合被激活时，我们不再用1作为其参与训练的值，而是采用这个组合历史上一段时期的点击率。这样一来，即使是同一个$f(a, u, c)$，在不同的时间点，其所对应的特征取值也是不同的，这样的特征就是动态特征。
+
+采用历史点击率作为动态特征，可以这样来理解：我们最终预测的是某个特定$(a, u, c)$上的点击率，而其某个特征组合$f(a, u, c)$ 上的点击率，可以认为是关于最终目标的一个弱决策器。通过对这些对应特征组合的弱决策器的融合，我们可以更容易地预测该$(a, u, c)$上的点击率。这样的弱决策器方案有个最大的好处，那就是这些弱决策其本身只需要简单的数据统计就可以得到，而不需要复杂的训练过程。因此，通过这些简单的弱决策器来捕捉模型的动态部分，这样整体的融合模型就可以不必那么快速地更新了。使用动态特征的另一个好处，是模型的参数数目可以大大减少：对于(地域=北京, 广告类型=电商)和(地域=上海, 广告类型=日化)这两个维度组合的具体实例而言，如果采用静态特征方案，需要对这两个实例分配不同的特征编号；而采用动态特征方案时，可以在模型中共享同一个特征参数，而通过不同实例的不同特征取值来分辨它们。这样一来，整体模型的参数个数，就由各种维度组合总的实例数目降低到了维度组合的种类数目，其离线估计和在线计算都会大为简化。
+
+\subsubsection{位置偏差与CoEC}
+
+使用点击率作为动态特征概念上没问题，但在实际操作中会遇到很大困难，特别是当广告主数量不充分的时候。我们假设某广告网络有两个广告位，一个是某网站首页首屏，一个是某小说网站内容页最下端，如果用点击率作为直接的反馈，很显然前几天投在更多地第一个广告位的广告会表现出更好的效果，而这主要是由于位置带来的偏差。请大家再次回顾一下我们在第一章中讲到的广告有效性模型-- 位置是曝光有效程度的关键因素。
+
+除了广告位位置，还会有其他一些非定向因素对点击率有比较大的影响，主要的有：广告位尺寸、广告位类型(比如门户首页、频道首页、内容页、客户端)、创意类型(比如图片、flash、富媒体)、操作系统、浏览器、日期和时间等。所有这些因素，都与广告决策没有关系，但是对点击率的影响要远远超过其他定向技术。因此，在这些因素上占据优势的广告，其点击率会被严重高估，如果直接用点击率作反馈，也会造成强者愈强的马太效应。
+
+如何去除位置等因素的影响呢？如果我们有财力和人力，可以采用眼球跟踪(Eye Tracking)的设备来评估用户对页面上广告位的关注程度，在后续的统计中据此做归一化。对于一些极关键的页面，比如搜索广告结果页，这样做是值得和可行的。但对于大量显示广告的广告位来说，这样做显然不切实际。工程上一种合理的办法，是将某广告位相当长一段时期内的平均点击数作为其关注程度的近似评估，我们把这一指标叫做\begin{CJK*}{GBK}{kai}{期望点击(expected click)}\end{CJK*}。 请大家一定注意，与字面直觉不同，期望点击是对展示有效性的一个评估指标。
+
+期望点击要求评估的是在广告质量完全随机的情况下，广告位或其他属性对应的平均点击率。要严格达到这一目的，需要采用随机出广告的策略做小部分流量的测试。这样的方法同样只能用于搜索广告等因素简单且非常重要的页面。在考虑多个因素共同作用，或广告环境比较复杂的情况下，我们可以采用从数据中近似地学习出期望点击的方法。该方法概念上很简单，我们只用哪些偏差因素作为特征，训练一个点击率模型，这个模型我们称为偏差模型(bias model)。所谓偏差因素，即那些与广告决策无关的特征，这些特征一般来说与$a$无关，我们把偏差模型概念性地表示为$\mu_{\textrm{bias}}(u,c) = p_{\textrm{bias}}(h=1|u,c)$。偏差模型的形式和训练方法都可以与前面所谈的整体点击率模型一致，因此不再赘言。需要注意的是，偏差模型需要用比整体点击率模型更长时间的数据来训练，这样做的目的是希望消除某段时期广告质量带来的影响。
+
+得到了偏差模型以后，我们可以定义下面的归一化的点击率指标：
+\begin{equation}
+\textrm{CoEC} = \frac{\sum_i h_i}{\sum_i \mu_{\textrm{bias}}(u,c)}
+\end{equation}
+直观上看，这一指标是点击与期望点击的比值，因此我们称之为Click over Expected Click(CoEC)。由于在分母上考虑了位置以及其他因素的偏差对点击率的影响，这一指标可以更准确地表征某部分流量上广告投放的实际点击率水平，也比较适用于点击反馈这样的动态特征。
+
+采用动态特征和偏差模型的工程方案，点击率预测模型训练的流程分三步完成：首先，用较长一段时间的训练数据，只提取偏差特征并训练偏差模型；然后，利用得到的偏差模型，计算所需要维度组合上的COEC作为动态特征；最后，用所有动态特征和非偏差特征的动态特征训练整体点击率模型，其中用偏差模型的输出作为点击率的先验。我们可以用下图示例性地描述这一过程。
+
+\subsubsection{常见的偏差特征}
+
+前面说到，除了位置，在线广告中还有一些重要的偏差特征，是我们在建模时必须考虑的。对于一些常用且重要的的偏差特征，我们简单地介绍如下：
+
+一、广告位位置。位置的影响在搜索广告和显示广告环境下有一定的区别。对于搜索而言，页面布局简单，位置相对稳定，相应地统计也比较充分，因此可以将位置视为离散的变量，分别计算各个位置的EC。而对于显示广告，特别是在广告网络环境下的显示广告而言，位置的可能性非常多，因此不可能对每种不同的位置都作为独立的变量来考虑。比较合理的方法，是找出其重要影响因素，比如广告位中心相对于页面左上角的坐标，用这样的连续变量作为特征来训练偏差模型。
+
+二、广告位尺寸。尺寸的情形与上面说的位置因素很类似：在创意尺寸选择比较少的情况下，可以作为离散变量来处理；而在尺寸选择很多的情况下，也可以用长宽等连续变量来代替。对于搜索广告，由于各创意尺寸一致，这一因素的影响不存在。
+
+三、广告投放延迟。广告完成决策逻辑，并将最终结果返回给用户的整体时间长短，对点击率有着非常大的影响。如果在前端将广告请求发生的时间和最终展示时间都记录下来，可以为点击率预测模型提供一个重要的偏差特征。
+
+三、日期和时间。实际的观测表明，工作日还是周末，对不同类型的广告点击率有着明确的影响，这主要是由于在不同时间用户任务的集中程度不同，对广告的关注也有所区别。时间的因素，即是工作时间还是休闲时间，也有着类似的特性。因此，日期和时间一般来说也是必须要考虑的偏差特征。除了在模型中显式利用，我们往往还要求所有的训练过程都覆盖7天的整数倍的数据，其目的也是为了避免日期带来的偏差。
+
+四、浏览器。浏览器本身并不对广告效果有明确的影响，不过由于各个浏览器上Ad blocker的覆盖程度有较大区别，因此在实际建模中其影响也相当大。
+
+上面列举的几项都是在通用的广告系统中最常见的偏差特征，也是建模时需要首先考虑的，读者需要结合具体的广告产品，按照``去除与广告决策无关的影响因素"这一原则来确定和使用偏差特征。
+
+\subsubsection{点击反馈的平滑}
+
+用点击率或CoEC这样的点击反馈作为动态特征，大量的长尾维度组合对于更准确地预测点击率是有很大帮助的。但是要利用好这些长尾的维度组合，还需要解决一个问题，就是在统计不足的维度组合上如何稳健地统计这些动态特征：由于这些组合出现的显示数可能比较少，直接计算CTR或者CoEC都可能是相当不准确的。
+
+以CTR为例，公式\ref{ctr}给出了点击的生成模型，点击率就是这一模型的参数。在知道每次展示点击与否的情况下，可以很容易得出，参数$\mu$的最大似然估计为：
+\begin{equation}
+\hat \mu = \frac{\sum_i h_i}{N}
+\end{equation}
+其中N为总的展示数。当估计某些数据不足的维度组合上的点击率时，一般的思路是在分子分母上各加一个常量，以起到平滑的作用：
+\begin{equation}\label{smooth}
+\hat \mu' = \frac{\alpha + \sum_i h_i}{\gamma + N}
+\end{equation}
+很显然，$\alpha / \gamma$应该等于某更大流量范围内的平均点击率。可是$\alpha$和$\gamma$的绝对数值就没有太直观的方法可以设置。根据第二章中的介绍，我们也可以采用经验贝叶斯的方法来解决这个问题。
+
+在贝叶斯的框架下，我们可以把$\mu$看成随机变量，由于公式\ref{ctr}是一个二项分布，其参数$\mu$对应的共轭先验是Beta分布，即：
+\begin{equation}\label{beta}
+p(\mu| \alpha, \beta) = \textrm{Beta}(\mu | \alpha, \beta) = \frac{\Gamma(\alpha + \beta)}{\Gamma(\alpha) \Gamma(\beta)} \mu^{\alpha - 1} (1- \mu)^{\beta - 1}
+\end{equation}
+超参数$\alpha$和$\beta$其实就对应于公式\ref{smooth}中的$\alpha$和$\gamma - \alpha$。我们可以采用经验贝叶斯的方法来估计$\alpha$和$\beta$。将公式\ref{ctr}, \ref{beta}代入***给出的一般指数族分布经验贝叶斯解，可以得到解$\alpha$ 和$\beta$ 的具体EM算法：
+
+1. E-step:
+\begin{equation}
+\tilde \alpha_k^{\textrm{old}} = \alpha^{\textrm{old}} + \sum_{i=1}^{N_k}h_{k,i}, \quad \tilde \beta_k^{\textrm{old}} = \beta^{\textrm{old}} + (N_k - \sum_{i=1}^{N_k}h_{k,i})
+\end{equation}
+
+2. M-step:
+\begin{eqnarray}
+\psi(\alpha_k^{\textrm{new}}) - \psi(\alpha_k^{\textrm{new}} + \beta_k^{\textrm{new}}) = \frac{1}{K} \sum_{k=1}^K \psi(\tilde \alpha_k^{\textrm{old}}) - \psi(\tilde \alpha_k^{\textrm{old}} + \tilde \beta_k^{\textrm{old}}) \\
+\psi(\beta_k^{\textrm{new}}) - \psi(\alpha_k^{\textrm{new}} + \beta_k^{\textrm{new}}) = \frac{1}{K} \sum_{k=1}^K \psi(\tilde \beta_k^{\textrm{old}}) - \psi(\tilde \alpha_k^{\textrm{old}} + \tilde \beta_k^{\textrm{old}})
+\end{eqnarray}
+其中M-step需要解关于$\alpha_k^{\textrm{new}}$和$\beta_k^{\textrm{new}}$的方程组，因而并不是闭式解，不过这一方程组并不难用数值方法求解。
+
+\subsection{点击率预测评测}
+点击率模型预测的事点击事件出现的概率，因此可以采用Precision-Recall(PR)曲线或Receive Operating Characteristic(ROC)曲线来评测。这两个区县实际上是对同样一组统计数据不同侧面的表现：点击率模型是一个对点击事件进行预测的模型，因此，对任何一个具体的样本，存在下面四种情况：1. 点击行为被预测为点击行为，其数目极为$n_1$；2. 点击行为被预测为非点击行为，其数目计为$n_2$；3. 非点击行为被预测点击行为，其数目计为$n_3$；4. 非点击行为被预测为非点击行为，其数目计为$n_4$。 对于这四个数值，有两种常见的视角：一是观察recall$=n_1/(n_1+n_2)$ 和precision$=n1/(n1+n3)$的关系，二是观察true positive rate$=n_1/(n_1+n_2)$和false positive rate$=n_3/(n_3+n_4)$的关系。(实际上recall 和true positive rate是一样的。)当然，是否被预测为点击，是针对某个点击概率的阈值而言的，因此，通过取不同的阈值，我们就可以得到一条precision/recall的曲线，或者是true positive rate/false positive rate 的曲线，前者即为PR曲线，而后者就是ROC曲线。为了方便理解，我们上述的几个基本量直观地表示在下面的图中：
+
+\begin{figure} \centering
+    \setlength{\unitlength}{0.8mm}
+    \begin{picture}(150,40)
+    \thicklines
+    \put(6,18){决策}
+    \put(0,11){(Hypothesis)}
+    \put(25, 21){$P$} \put(25, 6){$N$}
+
+    \put(61, 40){标注(Ground truth)}
+    \put(55, 33){$P$} \put(95, 33){$N$}
+
+    \put(41, 21){True Positives($n_1$)}
+    \put(41,5.5){False Negatives($n_2$)}
+    \put(81, 21){False Positives($n_3$)}
+    \put(81,  6){True Negatives($n_4$)}
+
+    \drawline(35, 30)(115, 30)
+    \drawline(35, 15)(115, 15)
+    \drawline(35,  0)(115,  0)
+    \drawline(35,  0)(35,  30)
+    \drawline(75,  0)(75,  30)
+    \drawline(115, 0)(115, 30)
+    \end{picture}
+\caption{点击率模型评测若干统计量}
+\label{fig_Bayes}
+\end{figure}
+
+
+实际的PR曲线可以参见图\ref{fig_PR}中的示意。一般来说，PR曲线呈下降的趋势，不过这一点并没有理论上的保证，实际数据上局部呈上升趋势的PR曲线也很常见。对广告而言，我们应该更加关注PR曲线的头部，因为尾部是recall比较高，也就是很多广告候选都被考虑时的情形，而实际的投放环境中，我们只选择排名最好的一个或几个候选。另外一点需要注意的是，PR曲线下面的面积是没有明确的物理意义的，因此不能作为有价值的指标来衡量。
+\begin{figure}\label{fig_PR}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.3\textwidth]{PR.eps}
+}
+\caption{PR曲线示例}
+\end{figure}
+
+实际的ROC曲线可以参见图\ref{fig_ROC}中的示意。一般来说，ROC 曲线呈上升的趋势，不过这一点同样没有理论上的保证。与PR曲线不同，ROC曲线下的面积是有着明确的物理意义的，它在一定程度上表征了对click=0和click=1事件估计值排序的正确性。我们把ROC曲线下的面积称为AUC(Area Under Curve)，是评价点击率模型是常用的量化指标。AUC 虽然经常被用作点击率模型的质量代表，却有一个非常重要的问题需要引起注意：那就是即使我们只用偏差模型\label{feature}，即对广告排序无直接贡献的模型来预测点击率，AUC往往也处于比随机猜测高得多的水平上，如图\ref{fig_ROC}中所示。因此，模型对广告排序的作用，需要对这两个AUC的差值做评估才能比较公允地加以衡量。
+\begin{figure}\label{fig_ROC}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.3\textwidth]{ROC.eps}
+}
+\caption{ROC曲线示例}
+\end{figure}
+
+无论是计算ROC曲线还是PR曲线，核心都是要统计上述的$n_1, n_2, n_3, n_4$四组值。严格的统计方法，需要对整个测试集按照模型估算的点击率做排序，不过这样的计算复杂度为$O(N\log N)$($N$为测试集的样本数目)，显然在测试样本量较大时无法实用。因此，我们可以采用近似但对实用来说足够精确的方法，即将整个点击率的取值范围划分成一组区间，并在每个区间上得到一个曲线点。这样的方法示例性代码如下：
+\begin{lstlisting}[language={C++}]
+const float INF = 1e10f;
+
+void curve_acc(vector<float>& scores, int binNum,
+               vector<bool>& labels,
+               vector<int>& TPs, vector<int>& FPs
+               vector<int>& TNs, vector<int>& FNs) {
+    assert(scores.size() == labels.size());
+    int sampleNum = (int)scores.size();
+
+    //`遍历所有的样本以得到score的最小最大值`
+    float minScore = INF, maxScore = -INF;
+    for (int s = 0; s < sampleNum; s ++) {
+        if (scores[s] < minScore) minScore = scores[s];
+        if (scores[s] > maxScore) maxScore = scores[s];
+    }
+
+    // `得到各个bin的阈值`
+    vector<float> bins;
+    float step = (maxScore - minScore) / binNum;
+    bins.assign(binNum + 1, minScore);
+    for (int b = 0; b < binNum; b ++)
+        bins[b + 1] = bins[b] + step;
+
+    // `再次遍历样本以得到各个bin上的统计值`
+    tpRates.resize(binNum, 0);
+    fpRates.resize(binNum, 0);
+    for (int s = 0; s < sampleNum; s ++){
+        for (int b = 0; b < binNum; b ++){
+            bool positive = (scores[s] > bins[b]);
+            if ( labels[s] && !positive)TPs[b] ++;
+            if ( labels[s] &&  positive)TPs[b] ++;
+            if (!labels[s] && !positive)FPs[b] ++;
+            if (!labels[s] &&  positive)FPs[b] ++;
+        }
+    }
+}
+\end{lstlisting}
+此算法需要对数据进行两次遍历，第一次得到点击率取值的范围，第二次得到各个曲线点上的$n_1, n_2, n_3, n_4$，很显然，其计算复杂度为$O(2N)$。 另外，这样的算法结构可以非常容易地用两次map/reduce过程来实现，因而特别适合于大规模数据集上的评价。
+
+\subsection{智能频次控制}
+
+在第三章中，我们介绍了频次控制的问题。在广告网络环境下，这一问题有相当大的变化。我们考虑在合约式广告的情形下，由于广告主对于位置可以由合约控制，因而可以在某个特定的位置上设定展示频次，这一点在按GD方式售卖的视频前贴片广告中应用最为广泛。但是在广告网络情形下，由于广告主的创意可能出现在各种媒体的各种位置上，而根据\ref{feature}中的讨论，不同位置的有效展示有相当大的差别。因此，简单设定一个展示数目上的频次来控制用户的接触次数虽然大体也会起到一些作用，但是从本质上说是不太合理的。
+
+在这种情况下，我们需要一个更智能的频次控制方案。最直接的思路，是利用\ref{feature}中介绍的CoEC概念。由于EC从某种程度上更接近于有效展示数目，我们可以采用EC上的累积计数代替频次来控制用户接触次数。在品牌广告和效果广告两种情况下，智能频次控制的做法也有所不同：在品牌广告中，可以通过EC计数上的直接控制来达到一定用户接触程度的目的，由广告主来直接设定；在效果广告中，则可以将EC的计数，或者频次的计数，作为点击率预测模型的特征直接加入训练，靠点击率模型的作用降低出现频次过高的创意的竞争力。
+
+换句话说，在精细的效果要求下，我们实际上更加认清了频次的本质：它与其他影响点击率的特征是平等的，并且应该放在统一的、数据驱动的计算框架下加以利用。而究竟对某个创意应该将频次控制在几，也不应该是根据经验设定，而是应该放在竞价的环境中自行决定。对于传统广告或者在线合约广告中表现出来的其他类似的经验总结，在竞价广告的环境里，也应该以这种态度去对待。
+
+\subsection{探索与利用}
+上面关于点击率预测的讨论中，我们知道需要采取或者模型、或者特征上的手段来更多地捕获动态信息。这也就意味着，对某种类型的$(a, u, c)$组合，如果没有相关历史数据的支持，很难对其合理地估计点击率。由于线上我们总是使用认为最优的策略来投放广告，那些非最优的组合出线机会很少，因而对这部分的估计也就不准确。实际上，无法对特征空间采样构造训练集，是互联网问题区别于其他机器学习问题的重要特点。举例来说，在搜索广告市场中，往往有相当比例的广告商从来得不到展示机会因而退出市场。虽然每一次决策我们都在尽力优化eCPM，很显然这不是系统的最佳宏观状态。
+
+解决这个问题的方法，属于强化学习(Reinforcement Learning)的范畴。直觉的想法，是牺牲一部分流量上最优eCPM的诉求，采用相对随机的策略来采样效果未知的特征空间，这称为探索过程(Exploration)；同时根据探索和正常决策的总体流量更有效地预测用户的反馈行为，这称为利用过程(Exploitation)。这样的整体策略，一般称为探索与利用(Explore and Exploit, E\&E)。E\&E可以形象地类比成玩老虎机是的决策问题：玩家面对老虎机上$A$个有不同期望收益的手柄，需要用尽可能少的筹码探索出收益最高的那个手柄，然后利用这个结果去获取回报。这种简单的$A$中选1的研究问题，也称为Multi-Arm Bandit(MAB)问题。我们先来看看MAB问题的数学描述。
+
+假设有$A$个手柄$a\in\{1, 2, \cdots, A\}$(这里的手柄可以认为是广告)，在每个决策时刻$t$(对应于广告展示)，我们必须从$A$个手柄中选择一个，而目标是优化许多次决策后的整体收益。每个广告$a$在第$t$次展示的收益计为$r_t(a)$，对于不同的$t$，这些收益是独立同分布的。在$t$时刻，我们用下面的两个量来分别表示该分布的均值$\langle r(a)\rangle$与方差的经验估计(此处先不考虑$u, c$的影响)：
+\begin{eqnarray}\label{rew_exp}
+\overline{r_t(a)} &\triangleq& \frac{1}{t}\sum_{i=1}^t r_i(a)\nonumber \\
+V_t(a) &\triangleq& \frac{1}{t}\sum_{i=1}^t [r_i(a) - \overline{r_t(a)}]^2
+\end{eqnarray}
+最优的手柄或广告，定义为期望收益最高的那个：
+\begin{eqnarray}\label{rew_opt}
+a^*= \arg\max_a \langle r(a)\rangle
+\end{eqnarray}
+
+MAB问题有一个简单的基础方法，即总是用比例为$\epsilon$的一小部分流量来做探索，在探索流量上随机选择$A$个广告中的一个；在剩余的$1-\epsilon$ 比例的流量上，总是选择经验收益最高的那个广告。这样的基础方法称为$\epsilon$-贪婪法。很显然，只要经过足够多次的尝试，$\epsilon$-贪婪法是一定可以找到最优的那个手柄的。既然如此，还有什么深入研究的必要呢？我们当然是希望能够以更小的代价找到最优手柄。这里的代价，定义为整个过程的回报与一开始就总是选择最优手柄这一策略的回报差值，即我们探索所付出的代价。对于一次选择广告$a$的展示，代价数学上的表达为：
+\begin{eqnarray}\label{regret}
+\Delta_a \triangleq \langle r(a^*)\rangle - \langle r(a)\rangle
+\end{eqnarray}
+E\&E过程的目标是使得整体的代价(Regret)最低。以$T_t(a)$表示到$t$时刻为止分配给$a$的展示数，则这一代价可以写成：
+\begin{eqnarray}\label{regret}
+R_t = \sum_{a=1}^A T_t(a) \Delta_a
+\end{eqnarray}
+假设总共需要进行$T$次展示决策，探索一些系统性的方法，使得我们在对最优广告$a^*$没有先验了解的情形下，以比较低的代价完成这一过程，是这个问题研究的关键。这一问题的思路，需要借鉴到类似于贝叶斯学习的思想，即将估计的不确定性引入解决方案中，我们来看一下一些常见的方法。
+
+\subsubsection{UCB方法}
+
+谈到MAB问题经典的思路，不能不介绍Upper Confidence Bound(UCB) 这一族的方法。从物理意义上看，此方法的关键，是在每次投放时，不是简单地选择经验上最优的广告，而且考虑到经验估计的不确定性，进而选择估计值有可能达到的上界最大的那个广告。
+
+因此，在每个决策点，UCB的过程主要分成两个步骤：首先根据过去的观测值，利用某种概率模型，计算出每个$a$的期望回报的UCB；然后，简单选择UCB最大的$a$。可以看出，这一算法的关键在于如何计算UCB。 文*中给出的一种UCB计算策略，称为$\beta-$UCB策略，是按照下式计算上界：
+\begin{eqnarray}\label{regret}
+B_{k,s} = \left( \bar X_{k,s} + \sqrt{\frac{2 V_{k,s} \log (\beta_s^{-1})}{s}} + \frac{16 \log (\beta_s^{-1})}{3s} \right) \wedge 1
+\end{eqnarray}
+其中$\beta_s \triangleq \frac{\beta}{4Ks(s+1)}$。相应地，在任意一个时刻$t$，只需要选择令$B_{k,T_k(t-1)}$最大的$a$即可。
+
+$\beta-$UCB的策略并不对回报的具体参数化模型表达有所假设，而是仅仅通过一阶和二阶的一些统计量来完成策略，因而具有比较好的普适性。这一策略直觉的好处，是我们不可能长时间地选择错误的$a$。
+
+\subsubsection{Contextual Bandit}
+
+虽然花了这么大的力气来介绍MAB问题和UCB方法，跟实际的广告问题一对应，我们会发现这离实用还相去甚远。实际广告系统中的主要挑战有两点：首先，我们需要探索的空间是$(a, u, c)$这一组合空间，而不是简单一组广告，这使得探索的复杂程度大大上升。以显示广告系统为例，我们要面临的实际情况是数十万的广告主、数百万的上下文页面、以及数以亿计的用户，即使我们将这些信息按某种层级结构聚合起来，这三者的组合可能性仍然相当庞大，对explore是个挑战。其次，对$(a, u, c)$的某一具体组合，并不像前文假设的那样有一个确定的期望收益，这是由广告问题的高度动态性决定的，对此我们在点击率预测那一部分已经做了深入探讨。
+
+对于需要探索的空间过大的问题，工程上比较常用的思路，是将此空间参数化，在一个维数较低的连续空间中进行探索。这样的E\&E问题，可以称为Contextual Bandit 问题。注意这里说的context，不同于上下文定向中提到的context，是指根据(a,u,c)组合参数化后的上下文空间位置，虽然术语上有所混淆，我们还是遵循原作者这样表述。
+
+Contextual Bandit的问题，代表性的思路有LinUCB方法\cite{Li}。 从名字就可以了解到，这一方法是将公式\ref{rew_exp}中表达的回报分布由$a$ 决定，变成由一些环境特征的线性组合决定，也就是说，在某个时刻$t$，我们将某个$a$的期望回报表达成：
+\begin{eqnarray}\label{LinUCB}
+E(r_{t, a}| x_{t, a}) = f(a, u_t, c_t)^\top \theta_a^*
+\end{eqnarray}
+可以看出，这样的表达达到了两个目的：首先，将$(a, u, c)$的组合空间，而不仅仅是$a$都纳入了探索的范围以内；其次，用线性组合的连续输出代替了离散的ID 值，使得E\&E过程可以在如此巨大的空间上实施。在\cite{Li}中，这一变换模型被称为disjoint linear model，这里“disjoint”的含义，指的是对于每一个广告$a$适用独立的线性变换参数$\theta_a^*$。细心的读者一定会发现，这样的假设在$a$数量巨大时也会成为阻碍，因此，在实用当中，我们也可以在广告主类型或其他聚合粒度上适用不同的变换参数。
+\section{点击价值估计}
+我们再来看看点击价值估计的问题。一次广告带来的点击在广告主的网站上能够产生多少直接或间接的价值，实际上与广告主的具体业务类型紧密相关。
+
+\section{搜索广告特定领域核心技术}
+从商业逻辑和产品形态上看，搜索广告可以认为是广告网络的一个特例。它是以上下文查询词为粒度进行受众定向，并按照竞价方式售卖和CPC结算的广告网络。从检索、点击率预测等关键环节的技术上看，搜索广告与显示广告网络并没有本质的区别。不过，由于搜索广告本身的变现能力，即eCPM 远远高于显示广告，因此其市场重要程度也就得以彰显。对与搜索广告的一些独特问题和算法的研究，也就受到了非常高度的重视。在本章中，我们将在前一章讨论的竞价广告系统的基础上，着重探讨搜索广告相关的一些特殊问题。
+
+搜索广告与一般广告网络最主要的区别，是上下文信息非常强，因此用户标签的作用受到很大的限制。因此，关于搜索广告的研究，有两个技术上的重点：一是查询词的扩展，即如何对简短的上下文信息做有效的拓展，由于搜索广告的变现水平高，这样的精细加工是值得而且有效的；二是根据用户同一个搜索session内的行为对广告结果的调整，因为围绕同一个目的一组搜索，往往对于更准确地理解用户意图有很大帮助。本章中，我们将围绕这两个重点问题，概要性的介绍搜索广告中的思路与具体技术。
+
+尽可能快速地将用户搜索行为反馈到广告决策中的需求，催生了流式计算平台。这一技术与Hadoop这样的离线分布式计算平台相呼应，可以更有效地完成计算广告中的数据处理任务：对于那些长时期积累的海量用户行为数据，我们可以用Hadoop进行离线的、实时性不强的定期挖掘；对于那些短时用户行为，可以用流计算平台进行半实时加工和快速反馈，以便迅速指导线上决策。这样的计算分工和系统架构，其实不仅适用于搜索广告，也适用于显示广告网络里的短时受众定向和短时用户行为反馈。
+
+对搜索广告这个产品，不同搜索引擎提供商有不同的称呼，比如Paid Search, Search Ad, Sponsored Search 等。这些词汇概念上非常相似，但也略有差别，个人比较倾向于采用“Sponsored Search”这样的说法，而“Paid Search”有时会让读者对是谁付费产生误解。至于“Search Ad”，实际上还应包括搜索引擎中的其他广告形式，比如百度品牌专区，因而并不是本章讨论的狭义的完全竞价的搜索广告网络。
+\subsection{搜索广告系统架构}
+
+\subsection{搜索广告概览}
+
+本章中讨论的搜索广告，主要以通用搜索引擎为蓝本。实际上，很多垂直类搜索，特别是电子商务类搜索也有很强的广告变现能力，但产品形态可能会有所不同，大家可以有选择性地与下面讨论的问题来对照。另外，插入在自然搜索结果中的竞价排名模式，也不在我们讨论的范围内。
+
+如下图所示，搜索广告的展示区域，一般来说分为北(North)、东(East)、南(South)三个部分。北侧和东侧的所有位置，构成位置拍卖的标的物集合，但是并不是一定要在这些位置上出广告，这一点与显示广告有的区别。南区的广告，不同的搜索引擎有不同的产品处理方法，有的直接照搬北区广告，有的则直接照搬东区的前几条，在本章中不做讨论。一个搜索广告位置的示例如图\ref{fig_ss}所示。从这个示例可以看出，搜索广告是一个非常典型的位置竞价问题，就期望点击率而言，北显著高于东区，而同区当中位置越靠上也越高，因此，竞价时位置的排序为$\{\textrm{North}_1, \textrm{North}_2, \cdots, \textrm{East}_1, \textrm{East}_2, \cdots\}$，有一点特殊之处是，每次拍卖时的位置数目，是可以跟据广告相关性来动态调整的。
+
+\begin{figure}\label{fig_ss}
+\centering
+\scalebox{0.65}
+{
+    \includegraphics[width=1.4\textwidth]{ss.eps}
+}
+\caption{搜索广告竞价位置示例}
+\end{figure}
+
+搜索广告的受众定向标签，即是上下文的搜索词。由于搜索词非常强地表征着用户的兴趣，搜索广告可以进行非常精准的定向。相对这样的上下文信息，根据用户历史行为得到的兴趣标签重要性大打折扣，这一方面是因为其信号远不如上下文搜索词强烈，另一方面是因为用户这样强烈兴趣的任务是绝不能被打断的(参见第二章中广告有效性原理部分)。这是搜索广告区别于显示广告网络的最大特点。
+
+既然搜索词的重要性极高，粒度又非常细，如何根据广告主的需求对其关键词进行合理的拓展，找到那些相关而又效果不错的关键词，这对于需求方和供给方来说都有很大意义：需求方需要通过扩展关键词以拿到跟多流量；供给方则需要借助此来变现更多流量和提高竞价的激烈程度。因此，查询扩展(Query Expansion)是搜索广告的重要技术。搜索广告的查询扩展，与搜索中的这个问题，有相通之处，又有一些显著的区别。
+
+虽然按照用户历史行为做定向不适用于搜索广告，用户在一个session内的一系列查询，还是会对准确理解用户意图大有帮助。另外，前一章介绍的点击反馈特征，也存在着快速更新的需求。要达到这两个目的，系统上的挑战要大一些，原先那样基于Hadoop的离线挖掘模式就不适用了。正是这一需求的存在，催生了流式计算(Stream Computing) 的技术平台，目的是利用用户短时的行为快速、连续地得到一些统计信息，并反馈给线上决策系统。流式计算对于广告中许多问题都非常有用，我们以搜索广告为出发点，拓展讨论到这一技术在显示广告短时用户行为反馈中的用处。
+
+\subsection{短时行为反馈}
+对于搜索广告，尽管深度的个性化结果并不一定有效，但同一个session内的一系列查询对于准确理解用户当前的任务时有帮助的。因此，如果将用户短时的行为数据及时地反馈到线上决策系统，对广告效果的提高大有帮助。这样的需求主要体现在两个方面：1. 对Hadoop 上长更新周期的$f(u)$做补充的短时用户标签，例如对搜过“丰田”这个词的用户很快增强其“汽车”标签；2. 对CTR预测中的动态特征作补充的短时动态特征。其中前者主要对显示广告有价值，后者则对各种广告形式都有很大意义。
+
+对搜索广告而言，上下文信息即Query的核心作用是不能被弱化的，否则会对相关性和用户反馈有较大负面影响。因此，我们提倡在广告检索阶段，不采用短时行为反馈的到的标签信息来影响Query的检索结果，不过在排序阶段，可以利用短时动态特征来提高那些用户更倾向于选择的结果。
+
+我们以短时动态特征为例，来看看这里需要的实时计算问题。假设我们需要根据广告的展示和点击日志，准实时地统计(geo, advertiser)和(gender, ad category) 这两个纬度组合上的CoEC特征，并将这两组特征反馈给线上广告排序系统使用。那么这一计算的过程可以用下面的流程来示意：
+
+\subsection{流式计算平台}
+
+上面短时行为反馈的问题，直接催生了流式计算的技术和平台。流式计算平台的功能，是对在线流入的日志或其他事件信息准实时地进行统计和处理，并将处理的结果输出，以用于线上决策或其他监测。
+
+流式计算平台有若干开源工具可供选择，例如S4和Storm，这两个常用的流式计算工具也有一些不同之处。比如S4不保证每一条送入的事件都保证被处理，而Storm则保证每条事件都被处理，但并不保证仅仅被处理一次。这样的区别也反映了他们在最初设计时面向场景的不同：S4最早用于Yahoo!搜索广告的实时点击反馈，因此吞吐率的要求远远高于对数据一致性的要求；而Storm则主要面向一般的BI或其他数据服务，因此对数据的一致性要求较高，但同时也意味着在极端条件下性能上的损失。我们以Storm为例，了解一下流式计算的基本框架和计算过程。
+
+从上面流式计算支持的逻辑来看，也非常类似于一组Map/reduce任务，不过它与HDFS上的Map/reduce仍然有着本质的不同：HDFS上的Map/reduce是通过分布式的文件系统实现尽可能对计算进行调度，而流式计算仍然是在各台服务器之间调度数据来完成计算。这样的区别，使得它们的适用场景也有着很大的区别：流式计算适用于准实时、快速的数据统计和反馈，但是由于是在调度数据，所以并不适合于海量数据的批量计算；而HDFS上的Map/reduce更适用于数据量非常大，但是计算实时性要求并不太高的情形。实际的数据处理系统中，往往需要两者结合来达到数据量和实时性两方面的要求。
+
+我们以Storm为例来看看流式计算平台上计算的基本流程。
+
+\subsection{关键词推荐}
+\subsection{竞价优化}
+\subsection{查询扩展}\label{q_exp}
+
+搜索广告独特的技术中，查询扩展是尤其重要的一项，也是搜索广告研究最多的内容之一。由于这方面具体的技术繁多，我们没办法一一列举，因此先从框架上介绍三种主要思路。
+
+\subsubsection{基于推荐的方法}
+
+如果把用户一个session内的搜索词视为一个有内在联系的整体，我们可以在\{session, query\}这样的矩阵上通过推荐技术来完成产生相关关键词。这种方法利用的是搜索的日志数据。理论上讲，推荐领域的各种方法思路和方法，都可以用在查询扩展问题上。我们在此以查询扩展的问题为例，介绍一下推荐技术的基本算法和关键点。
+
+给定一组用户$u=\{1, \cdots, M\}$和一组关键词$w=\{1, \cdots, N\}$，我们可以有一个对应的交互强度矩阵$\{z_{uw}\}M\times N$。如果其中某个用户搜索过某个关键词，则矩阵的相应元素就置为一个相应的交互强度，比如该用户在一段时间内搜索过该词的次数。显然，这个矩阵中会有大多数的单元上是没有历史的搜索行为发生的，但是这种情况下，没有搜过并不意味着用户搜索的可能性为零，而推荐的基本任务，就是根据这个矩阵中已知的元素值，去尽可能预测性地填充那些历史上没有观测到的单元。类似的场景除了搜索，还广泛出现在各种互联网应用当中，比如商品的浏览或购买记录，在线电影的打分记录，都可以抽象出类似的交互强度矩阵以及相应的推荐问题。因此，这个问题在互联网数据挖掘领域得到了充分的重视和广泛的研究。
+
+我们来解释一下为什么可以利用推荐的方法进行关键词扩展。对于某一个关键词$w=n$来说，其原始的交互强度矢量$(z_{1w}, \cdots, z_{Mw})^\top$，虽然直觉上讲，我们也可以根据两个关键词对应矢量的相似度来找到近似的关键词，不过由于其元素过于稀疏，这一方法实用中往往并不可行。在经过了推荐算法的平滑以后，这一矢量变成$(z'_{1w}, \cdots, z'_{Mw})^\top$，由于推荐算法的平滑作用，矢量中的未知元素也都被填充上相对合理的值，于是就可以稳健地比较关键词的相似度和进行扩展了。
+
+关于推荐算法的综述，大家可以参考× 中的介绍。大体上看，推荐算法可以分为基于内存即非参数化的方法，和基于模型的参数化方法。前者大多是用某种维数较低的空间来概要性地刻画交互矩阵，然后根据该空间的生成参数来回复矩阵里未知的值。这种将空间降维的思路，与第四章中介绍的文档主题模型乍看起来很相似，因为后者也是在一个文档与关键词组成的强度矩阵上进行挖掘。不过，这两个问题还是有着比较明确的区别：即在推荐问题中，我们应该把那些未观测到的交互单元视为未知，而在文档主题模型中，合理的方法是认为未在某文档中出现的词交互强度为0。我们以推荐的一种典型算法，即SVD++算法为例，来看一下基于模型的推荐算法的基本思路。
+
+\subsubsection{SVD++}
+
+在Netflix举办的推荐算法大赛中，以Yehuda Koren为首的小组获得了头名，并得到了100万美元的大奖。他们采用了一种称为SVD++的算法技术，来预测某个用户对某个电影的评分。
+
+\subsubsection{基于主题模型的方法}
+
+除了利用搜索的日志数据本身，也可以体用一般的文档数据来进行查询词扩展。这类方法实质上就是利用文档主题模型，对某个查询拓展出主题相似的其他查询。这部分的原理和常用模型在\ref{sec_topic}中已经作了介绍。
+
+\subsubsection{基于历史效果的方法}
+
+对搜索广告而言，还有一类方法非常重要，那就是利用广告本身的历史eCPM数据来挖掘变现效果较好的相关查询。由于在广告主选择竞价的查询词时，一般来说都会选择多个查询，如果从历史数据中发现，某些查询对某些特定广告主的eCPM较高，按么我们应该将这些效果较好的查询组记录下来，以后当另一个广告主业选择了某组查询中的一个时，可以根据这些历史记录，自动地扩展出其他效果较好的查询。
+
+虽然这种方法得到的扩展结果，经常会与前两种方法得到的结果相重合，不过由于这种方法直接使用广告的优化目标，即eCPM来指导查询词扩展，它往往能够成为前两种方法非常重要的补充手段，对于以营收为导向的广告产品来说，有着非常关键的作用。
+
+\subsection{广告条数个性化}
+
+搜索广告的内容本身虽然不宜进行特别深入的个性化，但是在搜索页面中插入的广告条数则存在很大的个性化空间。这样做的基础，是不同用户对于广告，或者相关程度差一些的内容，接受和容忍的程度有着很大的不同。实际上，即使在北美市场这样的用户受教育程度较高的市场上，也至少有三四成的用户不能完全分辨搜索结果和广告。因此，对不同的用户动态调整广告的条目数，可以使得在平均广告数目相同的约束下，整体系统的营收有显著的提高。
+
+广告条数的个性化又是一个带约束优化的问题。这里的约束，是系统在一段时间内整体的广告条数，而优化的目标，则是搜索广告系统的整体营收。
+
+\clearpage{\pagestyle{empty}} %\cleardoublepage
+
+\end{CJK*}

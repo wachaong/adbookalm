@@ -1,0 +1,121 @@
+\newpage
+
+\begin{CJK*}{GBK}{song}
+
+\setcounter{chapter}{4}
+\setcounter{section}{0}
+
+\chapter{广告交易市场核心技术}
+
+\thispagestyle{empty}
+\markboth{广告交易市场核心技术}{广告交易市场核心技术}
+
+\section{DSP系统架构}
+DSP的系统架构如下图所示，其中广告投放的决策流程为：DSP服务器通过RTBS接口拿到广告请求，然后经过与广告网络类似的决策步骤，包括检索和eCPM排序，找到价值最高的广告，并将报价返回给Ad Exchange。与广告网络相比，DSP的广告决策过程有一些难点：一是在eCPM估计时，除了估计CTR，还要估计点击价值，并且由于出价的要求，这一估计要尽可能准确；二是由于DSP是完全面向广告主的产品，广告主量的需求也需要满足，因此还要考虑在线分配的策略。上面讨论的这个决策流程，适用于以套利为目标的DSP，即通过优化算法提升广告主的ROI来赚取更多的利润。也有的DSP产品更接近于透明采买的方式，即广告主按照自己的用户划分和策略完成RTB购买，而DSP收取固定的手续费，这种情况下，对优化的需求就没有那么高。
+
+\begin{figure}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.65\textwidth]{DSP.eps}
+}
+\caption{需求方平台(DSP)系统架构示意}
+\end{figure}
+
+\section{数据管理平台DMP架构}
+
+DMP系统的架构可以示意性地表示如下图：通过Data Highway收集各合作媒体或广告主的访问日志，然后把这些日志中的用户信息映射到按照结构化或非结构化的标签体系上。这一架构的核心，是同时对接第三方数据和第一方数据，并根据这些数据对受众群体做灵活的、自定义的划分。虽然这些功能并不直接包括在广告交易环节中，却是数据驱动的在线广告市场中越来越重要的一环。
+
+\begin{figure}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.65\textwidth]{DMP.eps}
+}
+\caption{数据管理平台(DMP)系统架构示意}
+\end{figure}
+
+除了需要用到上面讨论的受众定向技术，DMP还有一个技术问题，就是如何将加工好的用户标签传送给其他标签的购买方，比如某DSP(见第7章)。虽然在图中我们的示意是直接通过在线cache的形式访问，实际上由于DMP与DSP之间跨域且物理上分开的原因，这样的方案并不实际。因此，在DMP中，往往需要提供数据交换(Data Exchange) 的产品功能，来进行在线或离线的数据对接。
+
+\section{实时竞价系统架构}
+我们先来看一下Ad Exchange的系统架构。
+
+\begin{figure}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.65\textwidth]{Adx.eps}
+}
+\caption{广告交易平台(Ad Exchange)系统架构示意}
+\end{figure}
+
+上图中给出的是Ad Exchange的骨干架构：当用户访问媒体页面，将广告请求发到Ad Exchange后，Ad Exchange向各个DSP发起询价并完成决策，然后将胜出的DSP返回给媒体页面进行广告投放。从核心概念上看，Ad Exchange既不需要自己的广告索引，也不需要eCPM估计，因而可以用非常简单清晰的架构实现。但是这仅仅是概念，实际产品中，为了支持广告主在不需要定制化用户划分时更方便的图形界面采买，也需要广告索引；而为了实现询价优化(后文有具体介绍)，一定的的eCPM估计也是不可少的。
+下面我们具体介绍一下Ad Exchange用到的相关技术和算法，包括实时竞价、cookie mapping以及带宽限制下的优化等。
+
+\section{实时竞价流程}
+
+实时竞价的的整个接口可以分成两部分：线下进行的将供给方与需求方用户ID对应起来的cookie mapping过程，和线上广告请求到来时的竞价和投放过程，如下图所示。下面我们分别介绍一下这两个过程。
+
+\begin{figure}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.3\textwidth]{RTB.eps}
+}
+\caption{实时竞价(RTB)接口解析}
+\end{figure}
+
+1. 身份对应(Cookie Mapping): 在RTB应用中，Cookie Mapping一般是由DSP在广告主网站上发起，这样做的原因是一般情况下DSP负责的是加工广告主定制受众标签，因而不需要对所有用户都建立对应关系。这一过程又可以细分为：1.1. 从广告主网站向DSP服务器发起cookie mapping请求，1.2. DSP与Ad Exchange服务器之间通信完成cookie mapping。由于Cookie mapping 这项专门技术的应用范围不仅仅限于RTB，我们将在下文对其做更具体和全面的讨论。
+
+2. 广告请求(Ad Call): RTB的广告请求部分可以分为三个步骤。2.1. 当用户接触到媒体网站的广告位时，前端向Ad Exchange发起广告请求；2.2. Ad Exchange向各DSP传送URL和本域名cookie，发起询价请求。DSP根据预先做好的cookie mapping查出对应的已方cookie，决策是否参与竞价，如果参与，则返回自己的出价出价。在等待一个固定的时间片后，Ad Exchange选出出价最高的DSP返回给媒体网站；2.3. 媒体网站从胜出的DSP 拿到广告创意并展示。其中2.3, 2.3 两步可以合并为一步，即DSP同时返回出价和广告创意地址，由Ad Exchange 返回给媒体。这样做的好处是减少了一次服务器往返，用户看到的广告延迟也会减少，缺点是Ad Exchange 可以获得DSP 某个广告商的相关受众，因而存在信息泄露风险，不太符合Ad Exchange 中立市场的地位。实际产品中，这两种方式都有采用。
+
+凡事有一利必有一弊。实际竞价的交易方式，虽然给予了广告主最大的流量选择空间，也对系统提出了更高的要求，并且带来了下面的一些实际的问题：一、每次展示都有Ad Exchange服务器与多个DSP服务器的参与，这使得服务器与带宽成本大大增加；二、在询价过程中，Ad Exchange要等待一个约定好的时间片(一般情况下为100ms)，这使得用户看到的广告延迟增加，对CTR有负面影响；三、原理上DSP可以以极低的出价参与竞价，这样虽不能获得流量，却可以低成本得到在媒体网站上的用户行为数据，这里存在着潜在的信息泄露风险。
+
+RTB的接口有两个对接方：在Ad Exchange方实现的部分，我们称为RTBD(RTB for Demand)；在DSP方实现的部分，我们称为RTBS(RTB for Supply)。在各个Ad Exchange 中，RTB 接口的细节和具体参数有很大的不同。显然这对于广告主从不同的Ad Exchange 中统一采买流量是不利的。为了解决这一问题，IAB经过充分市场调研与企业合作，制定了OpenRTB 的接口标准，这一标准涵盖了视频、无线、文字、条幅等多种广告形式下的RTB 问题，并已经为一些Ad Exchange所采用。
+
+\section{Cookie Mapping}
+
+在http协议下，cookie是在客户端记录用户身份和信息的主要手段。由于每个服务只能访问在本域名下的cookie，因此不同域名的用户身份不可能直接对应，必须要通过某种技术手段来完成，这样的技术手段称为cookie mapping。Cookie mapping应用的范围很广，除了上面提到的Ad Exchange与DSP之间的身份对应，典型的应用还例如媒体与DMP 之间的身份对应，以及某具有永久用户ID的服务向其他域名提供cookie找回的服务等。
+
+Cookie mapping的情况虽然比较复杂，我们可以重点关注三个问题：由谁发起？在哪里发起？谁保存映射表？最典型的情景有两种：一是涉及到两个域名，即在一个域名的服务上向另一个域名发动的cookie mapping；二是涉及到三个域名，即在一个第三方域名页面上发动的其他两个域名间的cookie mapping。我们分别来讨论这两种情况。
+
+\begin{figure}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.5\textwidth]{ckmapping-2domain.eps}
+}
+\caption{媒体与DMP间cookie mapping示例}
+\end{figure}
+
+涉及到两个域名的cookie mapping，典型的例子是媒体与DMP之间的身份对应问题。如上图所示，这一过程有5个步骤：1. 用户到达媒体页面；2. 向媒体的cookie mapping 服务请求一段负责此功能的JS代码；3. 媒体的cookie mapping服务返回该段JS 代码；4. 该JS代码判断需要mapping的话，向DMP发起cookie mapping请求，并传送两个参数：DMP的标识，以及媒体方的cookie；5. DMP返回一个$1 \times 1$的beacon，并记录下媒体方cookie与己方cookie的对应关系。考察一下我们关注的三个问题可以发现，这样的cookie mapping是由媒体方在媒体的页面上发动，并由DMP方保存映射关系。这样做有其合理性：媒体需要从DMP获得标签的人群是自己的地访问人群，因此从媒体页面发动；而DMP保存映射，可以比较方便地将自己的用户标签与媒体cookie对应，并传回给媒体。
+
+\begin{figure}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.5\textwidth]{ckmapping-3domain.eps}
+}
+\caption{DSP与Ad Exchange间cookie mapping示例}
+\end{figure}
+
+涉及到三个域名的cookie mapping，典型的例子是DSP与Ad Exchange之间的身份对应问题。如上图所示，这一过程有6个步骤：1. 用户访问广告主页面时；2. 选择性加载一个DSP 域名下的iframe；3. DSP判断需要mapping的话，返回包括多个beacon的动态html，此处多个beacon的目的是为了同时与多个Ad Exchange交换cookie；4. 通过其中的某个beacon，向对应的Ad Exchange发送cookie-mapping请求，并带有Ad Exchange标识、DSP标识和DSP cookie三个参数；5. Ad Exchange通过302重定向向DSP返回Ad Exchange 标识以及其域名下的cookie；6. DSP返回一个$1 \times 1$的beacon，并记录下Ad Exchange方cookie与己方cookie的对应关系。这个过程遇上一个过程相比，由于是在第三方的网站上发动mapping，因而较为复杂，需要用到302重定向，不过熟悉前端技术的朋友应该不难理解。仍然考察一下我们关注的三个问题，这次是由DSP在广告主页面上发动mapping，并由DSP保存映射关系。这样做也是符合业务逻辑的：DSP主要需要广告主的人群做深入加工并对这部分人群在Ad Exchange中出价，因此从广告主页面发动；而RTB 是cookie的对应由各DSP分别自行完成，比在Ad Exchange 中集中是完成显然更加合理，因此这一映射表保存在DSP方。
+
+除了上面两个典型的例子，cookie mapping可能碰到的需求还很多，但大家只要分析清楚关键的那三个问题，并透彻理解上面两种方式，相信很容易举一返三，根据实际需求设计出合理的方案。
+
+\section{询价优化}
+
+Ad Exchange中计算虽然不太多，也有一个很重要的问题需要解决，那就是如何在带宽和服务成本的约束下获得更高的eCPM。 如果不考虑成本，Ad Exchange的策略非常简单，每次展示都向所有接入的DSP询价即可。可是当DSP数以十计时，服务成本就为上升一个数量级，这显然是无法接受的。因此，Ad Echange需要解决的一个关键问题，就是如何在带宽或服务成本的约束下，优化整体市场的eCPM水平。要考虑带宽或服务成本的约束，显然就需要对每次展示中询价的DSP数目做精简，因此，这个问题也称为询价优化(Call Out Optimization)。
+
+询价优化有两种典型的思路，一种是工程规则的思路，另一种是将其描述成一个带约束优化优化问题并求解的思路。我们先介绍一下工程规则的思路：考虑到DSP方有相当一部分是按照广告主定制标签来采买流量，因此，这种DSP一般来说只会在自己感兴趣的人群，也就是cookie-mapping映射过的用户群上出价。显然，Ad Exchange是可以先验地知道这一用户群的，因此，对这类DSP中的某个，如果当前Ad Call到达的用户cookie如果没有与其映射过，那么就不需要向该DSP询价。一般来说，这样的规则可以显著降低带宽需求。不过，也有很多的DSP并不是仅仅在广告主用户集合上出价，或者当这样做仍然不能满足带宽成本的要求时，就需要进一步的优化了。
+
+询价优化的问题，由于也是需要在每个Ad Call到来时做决策，因此从框架上非常类似于第三章中的在线分配问题。只不过这里的约束，变成了带宽或服务的成本。由于从商业规则上说，我们不能完全依赖eCPM水平来决定向哪个DSP发起询价，因为这样有可能造成某些DSP完全得不到流量，从而退出市场。因此，实际的询价优化问题的约束，往往设置成各个DSP获得流量比例的一个上限，而这一上限是根据该DSP前面一段时间的花费来决定的。在这样的约束情形下，询价优化的问题可以描述为：
+\begin{eqnarray}\label{CallOut}
+\max \sum_{(i,a)\in E} r(a, u_i, c_i) y_{ia} \nonumber \\
+\textrm{s.t.} \quad \sum_{i\in \Gamma(a)} \alpha_{ia} y_{ia} \leq d_a, \forall a \in A
+\end{eqnarray}
+将此询价优化问题与第三章中的GD问题做对比，可以发现他们在数学上的本质是一样的。
+
+\clearpage{\pagestyle{empty}} %\cleardoublepage
+
+\end{CJK*}

@@ -1,0 +1,323 @@
+\documentclass[envcountsame,envcountchap]{ALMmono}
+
+\usepackage{bm}
+\usepackage{wrapfig}                  % 图文混排
+\usepackage{picins}                   % 图文混排
+\usepackage{sidecap}                  % 图注在单侧的宏包
+\usepackage{picinpar}                 % 图文混排
+\usepackage{makeidx}         % allows index generation
+\usepackage{graphicx}        % standard LaTeX graphics tool
+
+\usepackage{curves}
+\usepackage{epic,eepic}
+                             % when including figure files
+\usepackage{multicol}        % used for the two-column index
+\usepackage[bottom]{footmisc}% places footnotes at page bottom
+\usepackage{epsfig}
+
+\usepackage{amsbsy,amsmath}
+\usepackage{rotating}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{psfrag}
+\usepackage{amscd}
+\usepackage{clrscode}
+
+%\usepackage{algorithm2e}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+
+\usepackage{mathptmx}
+\usepackage{amscd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+%\usepackage{diagrams}
+\usepackage{picinpar}
+\usepackage{mathrsfs}
+\usepackage{amsfonts}
+\usepackage{amsmath,amsfonts,amsthm}
+\usepackage[all]{xy}
+
+\usepackage{CJK}
+%\usepackage{titlesec}
+%\usepackage{CJKpunct}
+%\usepackage{CJKnumb}
+
+\usepackage{listings}
+%\usepackage{color}
+
+\paperwidth 170truemm
+\paperheight 228truemm
+\textwidth 148truemm
+\textheight 195truemm
+%\headheight=1.5\ccht
+\headsep=6truemm
+\footskip=20pt
+\topmargin=0pt
+\oddsidemargin=0pt
+\evensidemargin=0pt
+\linespread{1.25}
+
+
+\begin{CJK*}{GBK}{song}
+
+% etc.
+% see the list of further useful packages
+% in the Reference Guide, Sects. 2.3, 3.1-3.3
+
+\makeindex             % used for the subject index
+                       % please use the style svind.ist with
+                       % your makeindex program
+
+
+\makeatletter
+\renewenvironment{thebibliography}[1]
+%org     {\chapter*{\bibname
+%org    \@mkboth{\MakeUppercase\bibname}{\MakeUppercase\bibname}}%
+     {\chapter*{\bibname}%                            !!!
+      \@mkboth{\bibname}{\MakeUppercase\bibname}
+      \list{\@biblabel{\@arabic\c@enumiv}}%
+           {\settowidth\labelwidth{\@biblabel{#1}}%
+            \leftmargin\labelwidth
+            \advance\leftmargin\labelsep
+            \@openbib@code
+            \usecounter{enumiv}%
+            \let\p@enumiv\@empty
+            \renewcommand\theenumiv{\@arabic\c@enumiv}}%
+      \small%                                               !!!
+      \sloppy
+      \clubpenalty4000
+      \@clubpenalty \clubpenalty
+      \widowpenalty4000%
+      \sfcode`\.\@m}
+     {\def\@noitemerr
+       {\@latex@warning{Empty `thebibliography' environment}}%
+      \endlist}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{coro}[thm]{Corollary}
+\newtheorem{conj}[thm]{Conjecture}
+\newtheorem{de}[thm]{Definition}
+\newtheorem{hyp}[thm]{Hypothesis}
+
+\newtheorem{nota}[thm]{Notation}
+\newtheorem{ex}[thm]{Example}
+%\newtheorem{proc}[thm]{Procedure}
+
+\newtheorem{exer}[thm]{Exercise}
+
+\newtheorem{prob}[thm]{Problem}
+
+\def\refpp#1{(\ref{#1})}
+%
+%\def\refpp#1{(\ref{#1}){\tt{#1}}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+%\titleformat{\part}{\centering\Huge\bfseries}{第\,\thepart \,卷}{1em}{}
+
+\lstset{breaklines=true,numbers=left,numberstyle=\small,basicstyle=\footnotesize\ttfamily,frame=single,escapeinside=``,xleftmargin=2em,xrightmargin=2em, aboveskip=1em}
+
+%keywordstyle=\color{blue!70},commentstyle=\color{red!50!green!50!blue!50},rulesepcolor=\color{red!20!green!20!blue!20}
+
+\author{刘鹏}
+\title{广告的秘密}
+\subtitle{互联网计算广告技术}
+\maketitle
+
+\frontmatter%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\vspace*{4cm}
+\centerline{\Large \bf Dedicated to *****}
+\thispagestyle{empty}
+\newpage
+\thispagestyle{empty}
+
+\include{preface}
+\setcounter{tocdepth}{4}
+\tableofcontents%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 生成目录
+
+\mainmatter%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 正文
+\part{写给想从事互联网广告的朋友们}
+
+\include{ch1}
+\include{ch2}
+\include{ch3}
+
+\part{计算广告的今生前世}
+\include{ch4}
+\include{ch5}
+\include{ch6}
+
+\part{计算广告核心技术详解}
+\include{ch7}
+\include{ch8}
+\include{ch9}
+\include{ch10}
+\include{ch11}
+\include{ch12}
+
+%%%%%%%%%%%%%%%%%%%
+
+\begin{thebibliography}{GRC99}
+
+\bibitem{Arens}
+William F. Arens, \emph{Contemporary Advertising}, The McGraw-Hill, 2002
+
+\bibitem{Audibert}
+Jean Yves Audibert, Remi Munos, and Csaba Szepesvari, Use of variance estimation in the multi-armed bandit problem, \emph{NIPS'06}, Dec 2006
+
+\bibitem{Bennet}
+J. Bennet and S. Lanning, The Netflix Prize, \emph{KDD Cup and Workshop}, www.netflixprize.com, 2007.
+
+\bibitem{Berger}
+Adam Berger, Stephen A. Della Pietra, and Vincent J. Della Pietra, A Maximum Entropy Approach to Natural Language Processing, \emph{Computational Linguistics}, 22(1): 39-71, 1996
+
+\bibitem{Bishop}
+Christopher M. Bishop, \emph{Pattern Recognition and Machine Learning}, Springer, 2006
+
+\bibitem{Blei}
+David M. Blei, Andrew Y. Ng, and Micheal I. Jordan. Latent Dirichlet allocation. \emph{Journal of Machine Learning Research}, 3:993–1022, Jan. 2003
+
+\bibitem{Boyd1}
+Stephen Boyd, Lieven Vandenberghe, \emph{Convex Optimization}, Cambridge University Press, 2004
+
+\bibitem{Boyd2}
+Stephen Boyd, Neal Parikh, Eric Chu, Borja Peleato, and Jonathan Eckstein, \emph{Distributed Optimization and Statistical Learning via the Alternating Direction Method of Multipliers, Foundations and Trends in Machine Learning}, 3(1):  1–122, 2010
+
+\bibitem{Broder}
+Andrei Z. Broder, David Carmel, Michael Herscovici, Aya Soffer, and Jason Zien, Efficient query evaluation using a two-level retrieval process, \emph{CIKM'03} : 426–434, Nov. 2003
+
+\bibitem{Canny}
+John Canny, GaP: A factor model for discrete data, \emph{SIGIR'04}, July 2004
+
+\bibitem{Chakraborty}
+Tanmoy Chakraborty, Eyal Even-Dar, Sudipto Guha, Yishay Mansour, and S. Muthukrishnan, Selective call out and Real-time Bidding, \emph{WINE'10}: 145–157, Dec, 2010
+
+\bibitem{Chen}
+Ye Chen, Dmitry Pavlov, and John F. Canny, Large-scale behavioral targeting, \emph{KDD'09}: 426—434, June, 2009
+
+\bibitem{Chen2}
+Peiji Chen, etc., Ad Serving Using a Compact Allocation Plan, \emph{*}, 2012.
+
+\bibitem{Cui}
+Ying Cui, Ruofei Zhang, Wei Li, and Jianchang Mao, Bid landscape forecasting in online ad exchange marketplace, \emph{KDD'11}, Aug, 2011
+
+\bibitem{Dean}
+Jeffrey Dean and Sanjay Ghemawat, MapReduce: Simplied Data Processing on Large Clusters, \emph{OSDI'04}, Dec, 2004
+
+\bibitem{Dempster}
+A. P. Dempster, N. M. Laird and D. B. Rubin, ``Maximum likelihood from incomplete data via the EM algorithm," \emph{J. Royal Statist. Society (B)}, 39, pp. 1-38, 1977.
+
+\bibitem{Edelman}
+Benjamin Edelman, Michael Ostrovsky, and Michael Schwarz, Internet advertising and the generalized second-price auction: selling billions of dollars worth of keywords, \emph{American Economic Review}, 97:242-259, 2005
+
+\bibitem{Feldman}
+Jon Feldman, Nitish Korula, Vahab Mirrokni, S. Muthukrishnan, and Martin Pal, Online ad assignment with free disposal, \emph{WINE'09}: 374–385, Dec, 2009
+
+\bibitem{Gates}
+Alan F. Gates, etc., Pig: A Structured, High-Level Dataflow System for Hadoop,  …
+
+\bibitem{Ghemawat}
+Sanjay Ghemawat, Howard Gobioff, and Shun-Tak Leung, The Google File System, \emph{SOSP'03}, Oct, 2003
+
+\bibitem{Ghosh}
+Arpita Ghosh, Preston McAfee, Kishore Papineni, and Sergei Vassilvitskii. Representative allocations for guaranteed display advertising. \emph{Manuscript}, 2009.
+
+\bibitem{Gill}
+Jeff Gill, \emph{Generalized Linear Model: A Unified Approach}, SAGE publications, 2000
+
+\bibitem{Gittins}
+J. Gittins. Bandit processes and dynamic allocation indices, J. of the Royal Stat. \emph{Society}, B(41), 1979
+
+\bibitem{Hofmann}
+Thomas Hofmann, Probabilistic latent semantic indexing, \emph{SIGIR'09}: 50-57, 1999
+
+\bibitem{Jansen}
+Bernard J. Jansen and Tracy Mullen, Sponsored search: an overview of the concept, history, and technology, \emph{Int. J. Electronic Business}, 6(2): 114-131, 2008
+
+\bibitem{Jordan}
+Michael I. Jordan, Zoubin Ghahramani, Tommi S. Jaakkola, and Lawrence K. Saul, An introduction to variational methods for graphical models, \emph{Machine Learning}, 37: 183–233, 1999
+
+\bibitem{Koren}
+Yehuda Koren, Factorization meets the neighborhood: a multifaceted collaborative filtering model, \emph{KDD'08}: 426–434, Aug. 2008
+
+\bibitem{King}
+Gary King, Lanche Zeng, Logistic regression in rare events data, \emph{Political Analysis}, 39(2):137-163, 2001
+
+\bibitem{Lamport}
+Leslie Lamport, Paxos made simple. \emph{SIGACT News}, 32(4):51–58, Dec. 2001
+
+\bibitem{Li}
+Lihong Li, Wei Chu, John Langford, and Robert E. Schapire, A contextual-bandit approach to personalized news article recommendation, \emph{WWW'10}: 661-670, Apr. 2010
+
+\bibitem{Lin}
+Chih-Jen Lin, Ruby C.Weng, and S. Sathiya Keerthi, Trust Region Newton Method for Large-Scale Logistic Regression, \emph{Journal of Machine Learning Research}, 9:627–650, 2008
+
+\bibitem{MacKay}
+David J.C. MacKay, \emph{Information Theory, Inference, and Learning Algorithms}, Cambridge University Press, 2003
+
+\bibitem{Malouf}
+Robert Malouf, A comparison of algorithms for maximum entropy parameter estimation, \emph{Proc. 6th Conference on Natural Language Learning} : 1–7, 2002
+
+\bibitem{Markowitz}
+Harry M. Markowitz, \emph{Portfolio Selection Efficient Diversification of Investments}, John Wiley \& Sons, Inc., New York Chapman \& Halll, Limited, London, 1959
+
+\bibitem{Abhilasha_Mehta}
+Abhilasha Mehta and Scott C. Purvis, Evaluating Advertising Effectiveness Through Advertising Response Modeling (ARM), \emph{1994 Advertising and Consumer Psychology Conference}, May, 1994
+
+\bibitem{Aranyak_Mehta}
+Aranyak Mehta, Amin Saberi, Umesh Vazirani, and Vijay Vazirani. Adwords and generalized online matching. \emph{J. ACM}, 54(5):22, 2007.
+
+\bibitem{Narayanan}
+Arvind Narayanan, Vitaly Shmatikov, Robust De-anonymization of Large Sparse Datasets, \emph{Proc. 2008 IEEE Symposium on Security and Privacy}, 111–-125, 2008.
+
+\bibitem{Nocedal}
+Jorge Nocedal, Stephen J. Wright, \emph{Numerical Optimization}, Springer, 1999
+
+\bibitem{Olston}
+Christopher Olston, Benjamin Reed, Utkarsh Srivastava, Ravi Kumar, and Andrew Tomkins, Pig Latin: A Not-So-Foreign Language for Data Processing, \emph{SIGMOD'08}: 1099-1110, June, 2008
+
+\bibitem{Perotte}
+Adler Perotte, Nicholas Bartlett, Noemie Elhadad, and Frank Wood, Hierarchically Supervised Latent Dirichlet Allocation, \emph{NIPS'11}, December, 2011
+
+\bibitem{Slee}
+Mark Slee, Aditya Agarwal, and Marc Kwiatkowski, Thrift: Scalable Cross-Language Services Implementation, Facebook, Apr, 2007
+
+\bibitem{Su}
+Xiaoyuan Su and Taghi M. Khoshgoftaar, A Survey of Collaborative Filtering Techniques, \emph{Advances in Artificial Intelligence}, Hindawi Publishing, Aug, 2009
+
+\bibitem{Varian}
+Hal R. Varian, Position auctions. \emph{International Journal of Industrial Organization}, 25:1163–1178, 2007
+
+\bibitem{Vee}
+Erik Vee, Sergei Vassilvitskii, and Jayavel Shanmugasundarum, Optimal online assignment with forecasts. \emph{Proc. of the ACM Conf. on
+Electronic Commerce}, 2010
+
+\bibitem{Wang}
+Xuerui Wang, Andrei Broder, Marcus Fontoura, and Vanja Josifovski, A search-based method for forecasting ad impression in contextual advertising, \emph{WWW'09}: 491-500, Apr. 2009
+
+\bibitem{Whang}
+Steven Euijong Whang and Hector Garcia-Molina, Indexing Boolean Expressions, \emph{VLDB'09}, Aug, 2009
+
+\bibitem{Zaharia}
+Matei Zaharia, Mosharaf Chowdhury, Justin Ma, Michael J. Franklin, Scott Shenker, and Ion Stoica, Spark: Cluster Computing with Working Sets.
+
+%\bibitem{alperin1}Alperin, J. L.; Bell, Rowen B.,ll Groups and representations. Graduate Texts in Mathematics, 162. Springer-Verlag, New York, 1995.
+
+\end{thebibliography}
+
+\end{CJK*}
+
+\end{document}
+
+%%%%%%%
+\ddot{}

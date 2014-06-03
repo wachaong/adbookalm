@@ -1,0 +1,403 @@
+\newpage
+
+\begin{CJK*}{GBK}{song}
+
+\setcounter{chapter}{0}
+\setcounter{section}{0}
+
+\chapter{基础知识准备}
+
+\thispagestyle{empty}
+\markboth{基础知识准备}{基础知识准备}
+
+\section{信息检索}
+\subsection{信息检索}
+
+从上面的计算广告系统架构可以看出，广告也采用的是类似搜索的技术框架以获得良好的扩展性。所以我们有必要对信息检索和搜索引擎的基本技术有所了解。不过广告相关的搜索技术范畴远远小于完整的网页搜索引擎，特别是不需要全网爬虫和Page Rank算法的部分。因此，我们重点介绍与广告相关的一些搜索基础技术，包括倒排索引和向量空间模型。
+
+\subsubsection{倒排索引}
+
+倒排索引是现代搜索引擎的核心技术之一，其核心目的，是将从大量文档中查找包含某些词的文档集合这一任务，用$O(1)$的时间复杂度完成。此处的$O(1)$是相对文档的数目而言的。也就是说，利用倒排索引技术，可以实现与文档集大小无关的检索复杂度，这一点对于海量内容的搜索来说，是至关重要的。为了说明倒排索引的基本概念，我们看一下下面的例子。假设我们有如下的几篇文档：
+
+$D_0=$``谷歌地图之父跳槽Facebook"
+
+$D_1=$``谷歌地图之父加盟Facebook"
+
+$D_2=$``谷歌地图创始人拉斯离开谷歌加盟Facebook"
+
+$D_3=$``谷歌地图创始人跳槽Facebook与Wave项目取消有关"
+
+$D_4=$``谷歌地图创始人拉斯加盟社交网站Facebook" \\
+对每篇文档都进行分词以后，可知这些文档中包含的关键词(term)有：\{谷歌，地图，之父，跳槽，Facebook，加盟，创始人，拉斯，离开，与，Wave，项目，取消，有关，社交，网站\}。首先，去掉“与”这样的没有实际表意作用的停止词(stop word)，我们对每一个建立一个链表，表中的每个元素都是包含该词的某篇文档的标识。于是，与上面的文档集对应的倒排索引，也就是所有关键词的倒排链集合，可以表示如下：
+
+谷歌$\rightarrow \{D_1, D_2, D_3, D_4, D_5\}$，地图$\rightarrow \{D_1, D_2, D_3, D_4, D_5\}$，之父$\rightarrow \{D_1, D_2, D_4, D_5\}$，
+
+跳槽$\rightarrow \{D_1, D_4\}$，Facebook$\rightarrow \{D_1, D_2, D_3, D_4, D_5\}$，创始人$\rightarrow \{D_3\}$，
+
+加盟$\rightarrow \{D_2, D_3, D_5\}$，拉斯$\rightarrow \{D_3, D_5\}$，离开$\rightarrow \{D_3\}$，Wave$\rightarrow \{D_4\}$，
+
+取消$\rightarrow \{D_4\}$，项目$\rightarrow \{D_4\}$，有关$\rightarrow \{D_4\}$，社交$\rightarrow \{D_4\}$，网站$\rightarrow \{D_4\}$。
+
+为了后文一些实例的方便，我们用下面一段代码中的类结构来表示一个倒排索引。这个类结构派生于Hash Map，其中的key为关键词即term，典型情况下，该key是string类型，但是在后文介绍的布尔表达式检索等场景中，其key的类型可能会发生变化。因此，为了逻辑统一起见，我们引入了模板参数来泛化此处的数据类型。而Hash Map 的value 就是倒排链，是一个由索引条目(Entry)组成的链表。每个索引条目有两个域，第一个是该条目对应的文档的ID，第二个是一个辅助变量，比如可以用于表示目前关键词在对此文档的TDIDF，在后文的其他索引类型中也会有独特的应用。当然，这种结构只是一个概念上的表达，实际的倒排索引还要存储很多其他信息，我们为了便于突出主要概念，在本书中采用这样简单的概念性描述。
+
+倒排索引最基本的操作有两项：一是向索引中加入一个新文档，二是给定一个由多个关键词组成的查询(query)时，返回对应的文档集合。我们也在下面的代码中对这两项基本功能的实现做了描述。需要注意的是：在倒排索引中，由于文档ID是在加入倒排索引时被在线分配的，因此每个倒排链都可以确保是有序的，这会在后文的应用中得到具体利用。
+
+\begin{lstlisting}[language={C++}]
+typedef pair<int, float> Entry;
+
+template <class TKey>
+class InvIndex : public map<TKey, list<Entry> > {
+  public:
+    vector<vector<TKey> > docs; // `文档正排表`
+
+  public:
+    void add(vector<TKey> & doc) {
+        // `在正排表里记录该文档`
+        docs.push_back(doc);
+        int curDocID = docs.size() - 1;
+
+        // `遍历document里所有的term`
+        for (int w = 0; w < doc.size(); w ++) {
+            map<TKey, list<Entry> >::iterator it;
+            it = find(doc[w]);
+
+            // `如果该term的倒排链不存在`
+            if (it == index.end()) {
+                list<int> newList;
+                index[doc[w]] = newList;
+                it = find(doc[w]);
+            }
+
+            // `在倒排链末尾加入新的文档ID`
+            it -> second.push_back(curDocID);
+        }
+    }
+
+    void retrieve(vector<TKey> & query, vector<int> & docIDs) {
+        int termNum = query.size();
+
+        // `合并所有term的倒排链`
+        list<Entry> result;
+        for (int t = 0; t < termNum; t ++) {
+            map<TKey, list<Entry> >::iterator it;
+            it = index.find(query[t]);
+            if (it == end()) // `该term倒排链不存在则跳过`
+              continue;
+
+            result.merge(it -> second);
+        }
+
+        // `得到返回的文档ID集合`
+        docIDs.clear();
+        list<Entry>::iterator lit = result.begin();
+        for (; lit != result.end(); lit ++)
+          docIDs.push_back(lit -> first);
+    }
+};
+\end{lstlisting}
+
+实际的倒排索引远远比这里示例性的代码复杂。其主要工程难点有很多，比如如何设计精简的数据结构以节省对内存的使用，以及如果准实时地将新的文档加入倒排索引。这些问题由于是信息检索领域专门的研究课题，又非广告的特殊需求，我们不再深入介绍。需要自行实现广告检索部分的读者，可以深入学习开源的倒排索引工具Lucene，或者参考这方面专门的文献。
+
+\subsubsection{向量空间模型}
+
+如果说倒排索引技术是大规模信息检索的基石，那么向量空间模型(Vector Space Model, VSM)则是信息检索中最基础且最重要的文档相似度度量方法之一。VSM的核心有两点，文档的表示方法和相似度计算方法，我们在下面分别介绍。
+
+首先，我们队每个文档采用“bag of words”假设，即用各个关键词(term)在文档中强度组成的矢量来表示该文档：
+\begin{equation}
+D=(x_1,x_2, \cdots, x_M)^\top
+\end{equation}
+其中$x_m$一般采用词表中第$m$个词在$D$中对应的TFIDF(Term frequency - Inverse Document Frequency)值，这是一种信息检索中最常见的词强度度量，它可以分解为两个量的乘积：这两个量是词频(Term Frerquency, TF)，即某文档中该词出现的次数；和倒数文档频率(Inverse Document Frequency, IDF)，即该词在所有文档中出现的频繁程度的倒数。IDF的引入，是考虑对那些广泛出现在各个文档中的常用词对主题的鉴别力并不强，因而需要降低其权重。IDF的计算方法有若干种，最常用的形式为：
+\begin{equation}
+\textrm{IDF}(m)=\log(N / \textrm{DF}(m))
+\end{equation}
+其中$\textrm{DF}(m)$为词$m$在其中出现的文档的总数目，$N$为总文档数目。在广告应用中如何计算IDF值，在某些情形下需要不同的处理：例如在处理对广告主有价值的竞价标的词时，可以采用所有广告描述，而不是互联网上的网页作为文档集合。相应地，在根据关键词进行广告检索时，也应该使用这种方法得到的TFIDF。
+
+这样的bag of words文档表示方法，是对自然语言最简单粗略的一种近似表示。它完全忽略了词的前后接续关系，以及更高阶的语法因素的影响，因而并不太可能具有精细的文档描述能力。不过，这种方法在信息检索中的作用无疑是巨大的，因为它通过极为简单经济的操作对文档进行了简化，同时又比较好地保留了文档的概貌，这对于海量文档数据的处理和索引非常有利。时至今日，虽然学术家在自然语言处理方面取得了许多进展，这种简单的方法，仍然是工程实践中信息检索和文档主题挖掘的最常用文档表示。如果我们考虑更精细的文档描述，可以进一步加入文档的n-gram信息，但是也会带来数据的爆炸式增长和模型估计稳健性上极大的挑战。
+
+采用baog of words的文档表示方法，在计算两个文档的相似度时，我们一般是用其对应矢量的余弦距离：
+\begin{equation}
+\cos(D_1, D_2) = \frac{D_1^\top D_2}{\|D_1\|\cdot\|D_1\|}
+\end{equation}
+余弦距离的最显著好处，是当两个矢量归一化不好时，仍然可以得到比较稳健的比较结果。比如有两篇一样的文档，将其中的一篇内容重复一遍，再去计算余弦距离仍然是0，而如果采用其他方式比如欧氏距离，结果就不再是0了。再比如两个人对各种电影打分，甲倾向于给较高的分数，乙倾向于给较低的分数，那么在一组三部电影上，甲给出的分数$\{3.6, 3.6, 4.8\}$，和乙给出的分数$\{3.0, 3.0, 4.0\}$，实际上一致程度相当高，这也可以被余弦距离比较公允地度量出来。
+
+了解了上面的这些内容，读者应该可以建立起对海量文档进行检索的基线方案了：在检索引阶段，需要对文档集合分词，并按照bag of words表示得到每个文档的TDIDF矢量，对分词后的文档集合建立倒排索引。当在线的查询到来时，也进行分词，并从倒排索引中查出所有符合要求的文档候选，并对其中的每个候选评价其与查询的余弦距离，按距离由小到大进行排序。这样的一个基本框架，也同样适用于广告这一大估摸数据挖掘问题，也是图\ref{Arch}的骨干性原理。不过，实际的搜索系统也好，广告系统也好，都不是简单地采用这样的基线系统，而是在检索、排序甚至分词等各个部分都有着更具体深入的算法，这些构成了该框架的血肉。总之，请大家在充分理解这样的类搜索式的骨干架构的基础上，再去深入挖掘各部分的算法和技术，方能举一反三，万变不离其宗。
+\section{最优化方法}
+为了探索比上面的极限系统更加有效的计算广告方案，我们必然会碰到大量的与数据挖掘和机器学习相关的算法问题。在这些与数据相关的问题中，最重要的基础技能，是最优化(Optimization)的理论和方法。这个主题讨论的是在给定一个数学上可以明确表达的优化目标以后，如何用系统性的方法和思路找到该目标的最优解。这部分的书籍和文章卷帙浩繁，笔者认为有必要从工程的角度出发，整理一下在面临各类目标函数时的一般性思路，并希望大家能够认清“模型”和“优化”这两个概念的联系与区别。
+
+最优化问题讨论的是，给定某个确定的目标函数(Objective Function)，以及该函数自变量的一些约束条件，求解该函数的最大或最小值的问题。这样的问题可以表示为下面的一般形式：
+\begin{eqnarray}\label{opt_gen}
+\min f(x) \nonumber \\
+\textrm{s.t.} \quad g(x) \preceq 0\\
+h(x) = 0\nonumber
+\end{eqnarray}
+这里$f(x)$是一个关于自变量$x$的目标函数，而$g(x)$和$h(x)$为$x$的矢量函数，对应着一组不等式和等式约束约束条件，其中$g(x) \prec 0$表示矢量$g(x)$的每一个元素都小于或等于0。根据约束条件以及目标函数的性质不同，最优化问题求解的思路也有很大的不同。我们先从没有约束条件的情形开始，这方面的方法是大多数最优化算法的基础。我们首先根据目标函数$f$ 是否可导，可以把相应的优化问题分成两类，这两类问题的工程解决方案有比较大的差别。
+
+\subsubsection{下降单纯型法}
+
+有些问题中，$f$不可导或者工程上求导代价极大\footnote{有时我们需要遍历所有数据或者使用很大内存才能得到目标函数的导数，这种情况实际上在工程中比问题不可导要更常遇到。}。这种情形下，假设函数值是连续的，我们有一种自然的思路，那就是采用不断试探的方法：在自变量为一维的情况下，给定一个初始区间，假设区间内有唯一的最小值，可以按照黄金分割的方法不断缩小区间以得到最小值。
+
+上面的方法也可以被推广到自变量是高维的情形，对应的算法我们称为下降单纯型法(Downhill Simplex Method)。 这一方法有一个更直观的称呼，即阿米巴(Ameoba)变形虫法。简单地讲，将一维空间上用两个点限制的区间不断变形的思路加以推广，在$N$维空间中，我们也可以选择一个$N+1$ 个点张成的超多面体，或称为单纯型(Simplex)，然后对这一单纯型不断变形以收敛到函数值的最小点。下降单纯型法的示例性代码如下所示。
+\begin{lstlisting}[language={C++}]
+void Ameoba() {
+}
+\end{lstlisting}
+
+\subsubsection{最速下降法}
+当$f$可以比较容易地求导时，基于梯度的方法是首要选择，这也是我们将要讨论的重点类型。我们先来看一下梯度的定义。假设自变量
+\[
+x = \left(x_1,x_2, \ldots x_N \right)^T\in R^N
+\]
+那么函数$f(x)$在$x$点的梯度可以写成
+\[
+\nabla f(x)=\left(\frac{\partial f}{\partial x_1},\frac{\partial f}{\partial x_2},\ldots ,\frac{\partial f}{\partial x_n} \right)^T
+\]
+梯度的几何意义，是$f$在$x$点函数值上升最快的方向，因此它是一个与$x$维数相等的矢量。而利用梯度的优化方法，概念上就是每次都沿着负梯度方向按某步长前进一小步，这样的方法称为梯度下降法(Gradient Descent)。其更新公式为：
+\[
+x \leftarrow x - \epsilon \nabla f(x)
+\]
+其中$\epsilon$ 控制着沿负梯度方向下降的速度，称为学习率(Learning Rate)。
+
+很多工程上的目标函数，都具有可分解的特性，即整个训练集上的梯度可以表示为各个训练样本梯度的和。在这种情况下，一个可行但效率并不太高的并行实现就是将计算梯度的过程分解到各个数据划分上分别完成，然后将各部分的梯度相加并更新参数。显然，这样的计算过程非常容易在map/reduce框架下实现。然而每迭代一步，都要用到训练集所有的数据，大数据下可想而知这种方法的迭代速度。
+
+同时，梯度下降的收敛速率可证明为线性收敛，线性收敛速率不大于
+令hessian矩阵特征值最小为a，最大为A
+
+且存在锯齿搜索问题
+
+
+http://zh.wikipedia.org/wiki/%E6%A2%AF%E5%BA%A6%E4%B8%8B%E9%99%8D%E6%B3%95
+综上，梯度下降法的缺点是：靠近极小值时速度减慢。直线搜索可能会产生一些问题。可能会'之字型'地下降。
+
+在在线学习(Online Learning)中，梯度下降的方法还有另外一种变形，也就是随机梯度下
+降(Stochastic Gradient Descent, SGD)的方法。SGD是一个重要的简化，在实际大数据的情况下，他比经典优化方法效果要好。因为经典优化方法算一次下降方向就已经需要很大计算量了。而SGD每一次迭代中，梯度的估计并不是精确的计算梯度,而是基于随即选取的一个样例。
+相对标准的梯度下降很快很多，有如下关键区别：
+标准梯度下降是在权值更新的每一步对多个样例求和，而随机梯度下降的权值是通过考查某个训练样例来更新的
+SGD需要的一次迭代计算量非常小，但是代价是他非常可能不是下降方向.
+在理论上，SGD的性质少。需要一个有经验的人选择很好的步长（学习速率）。
+如果标准误差曲面有多个局部极小值，随机梯度下降有时可能避免陷入这些局部极小值中。
+在计算上， SGD有个很大的缺点是不容易并行。
+
+值得注意的是，Jeff Dean等人实现了一个随机梯度下降算法的分布式并行化，加快了模型训练速度。（Asynchronous Distributed Stochastic Gradient Descent，），用以训练非凸的深度学习模型，效果比传统sgd更好。
+训练数据被分成多份（Data Shard），每份训练数据由一个模型训练集群复本（Model Workers）来处理。每个模型训练集群复本又可能包含很多台服务器，每台服务器将负责某些模型分区的训练。模型的参数统一存储在一系列参数服务器（Parameter Server）上，也做了水平分区。
+\subsubsection{拟牛顿法}
+\subsubsection{节省空间的拟牛顿法-LBFGS}
+
+\section{统计机器学习}
+机器学习(Machine Learning)是近年来得到快速发展和广泛应用的研究领域，它研究的是用数据或以往的经验优化计算机程序或算法的性能。从机器学习的方法论来看，可以大致分为统计的方法和非统计的方法。非统计的方法种类非常多，并且往往最后都归结于一个具体的优化问题，因此笔者认为可以通过深入掌握优化理论和算法，更加有效地把握各种非统计类方法。而统计类机器学习方法，虽然一般性的优化方法也广泛用到，三是也产生了一些在概率模型框架下系统性的方法和思路，下面我们把这一类的方法脉络稍加整理，供大家深入学习时做个简要纲领。
+
+\subsubsection{最大熵原理}
+
+统计机器学习中，指数族形式的分布由于求解的方便性，有非常重要的工程地位，我们先来看一下这一族分布形式产生的原因。要了解指数族形式产生的原因，需要先了解最大熵(Maximum Entropy)的原理。最大熵原理告诉我们，当我们在某些约束条件下选择统计模型时，需要尽可能选择满足这些条件的模型中不确定性最大的那个。如果采用熵作为统计不确定性的度量，这个问题就变成一个在这些约束下优化熵的问题。
+
+\subsubsection{指数族分布}
+
+出于上面对最大熵原理和求解过程的讨论，我们可以了解到指数形式的分布在统计机器学习中的重要地位。实际上，这一族分布是大多数模型在设计时的基本构件，也是我们学习统计机器学习必须掌握的基础。指数族分布的归一化形式(Canonical Form)可以表示为：
+\begin{equation}\label{exp}
+p(\boldsymbol x | \boldsymbol \theta)=h(\boldsymbol x)g(\boldsymbol \theta)\exp\{\boldsymbol \theta^\top \textrm{u}(\boldsymbol x)\}
+\end{equation}
+在这一形式中，$\textrm{u}(x)$是对变量$x$的某个固定的矢量变换函数，$\theta$即为指数族分布的参数，而$g(\theta)$为使得概率密度曲线下面积为一的归一化项。
+
+%\includegraphics[width=0.15\textwidth]{GD.eps}
+指数族分布在建模上被广泛采用的，是因为一个重要的特性。这一特性是，指数族分布参数的最大似然估计，可以完全由其充分统计量(Sufficient Statistics)得到。这里的充分统计量，指的是训练集上变换函数$\textrm{u}(x)$的统计量，即$\sum_{i=1}^N \textrm{u}(x_i)$。在给定了充分统计量以后，$\theta$的最大似然解可以通过解下式求得：
+\begin{equation}\label{ML}
+-\nabla \ln g(\theta_{\textrm{ML}}) = \frac{1}{N}\sum_{i=1}^N \textrm{u}(x_i)
+\end{equation}
+这一概念强调的是，在给定充分统计量以后，最大似然估计过程与数据无关。根据充分统计量的形式，我们很容易得出，无论什么样的指数族分布，我们都只需要遍历一遍数据，就可以得到最大似然解，这一点实际上对应了一个非常简便的map/reduce实现。这也是指数族分布在大数据运算上带给我们的最大便利性，请大家细心体会。
+由于指数族的分布形式与最大熵原理的本质联系，这一族的许多重要分布都可以从最大熵的角度加以解释。我们在下表中列举了几种重要的指数族分布形式，以及其主要用于描述的变量类型，希望对大家有所帮助。
+\begin{table}
+  \caption{若干重要指数族分布形式}
+  \begin{center}
+    \begin{tabular}{|c|c|c|c|c|}
+      \hline 分布 & $\textrm{u}(x)$ & 解释 & 使用场景 & 示例\\
+      \hline Gaussian    & $\left[\begin{array}{c}x\\x^2\end{array}\right]$ & {给定均值方差情形下熵最大的分布} & 一般实变量 & \\
+      \hline Gamma       & $\left[\begin{array}{c}x\\ \ln x\end{array}\right]$ & 给定均值方差，且$x>0$情形下熵最大的分布 & 非负实变量 &\\
+      \hline Beta        & $\left[\begin{array}{c} \ln x\\ \ln (1-x)\end{array}\right]$ & 给定均值方差，且$x\in(0, 1)$ 情形下熵最大的分布 & 某区间内的实变量 &\\
+      \hline Multinomial & $\ln x$ & 给定均值方差，且$x\in(0, 1)$情形下熵最大的分布 & 离散变量 & \\
+      \hline
+    \end{tabular}
+  \end{center}
+  \label{table_exp}
+\end{table}
+
+从上面的示例中，还可以发现指数族分布的另一个重要特点，那就是这些分布都是单模态(Uni-modal)的。所谓单模态，可以理解为分布从几何形态上来看只有一个峰或者一个谷，这实际上说明了指数族分布虽然数学上使用方便，但其实际上的描述能力是有限的，并不适合于表达多种因素并存的随机变量。
+
+\subsubsection{混合模型和EM算法}
+
+由于指数族分布是单模态的，因而不适用于存在比较复杂的数据分布。为了解决这个问题，同时又能充分利用到指数族分布的一些方便的性质，工程领域产生了采用多个指数族分布叠加的部分来建模的实用方法，即混合模型(Mixture Model)。如果我们用$q(x)$来表示某种指数族分布形式，那么其相应的混合模型为：
+\begin{equation}
+p(\boldsymbol x | \boldsymbol w, \boldsymbol \Theta)= \sum_{k=1}^K w_k h(\boldsymbol x)g(\boldsymbol \theta_k)\exp\{\boldsymbol \theta_k^\top \textrm{u}(\boldsymbol x)\}
+\end{equation}
+其中$w = (w_1, \cdots, w_K)$为各个组成分布先验概率，而$\Theta = (\theta_1, \cdots, \theta_K)$表示各个组成分布的参数。这一分布的图模型表达如下图所示：
+\begin{figure} \centering
+    \setlength{\unitlength}{0.7mm}
+    \begin{picture}(170,19)
+    \thicklines
+
+    \scaleput(40, 11){\bigcircle{6}}
+    \put(39, 4){$\boldsymbol \theta_k$}
+
+    \drawline(43, 11)(67, 11)
+    \drawline(63, 10)(67, 11)(63, 12)
+
+    \scaleput(70, 11){\bigcircle{6}}
+    \put(68, 5){$\boldsymbol x_n$}
+
+    \drawline(73, 11)(97, 11)
+    \drawline(77, 10)(73, 11)(77, 12)
+
+    \scaleput(100, 11){\bigcircle{6}}
+    \put(99, 4){$\boldsymbol z_n$}
+
+    \drawline(103, 11)(127, 11)
+    \drawline(107, 10)(103, 11)(107, 12)
+
+    \scaleput(130, 11){\bigcircle{6}}
+    \put(129, 4){$\boldsymbol w$}
+
+    \put(58,0){\framebox(56,19){}}
+    \put(109, 1){$N$}
+
+    \put(28,0){\framebox(26,19){}}
+    \put(49, 1){$K$}
+
+    \end{picture}
+\caption{混合分布的概率图模型表示}\label{fig_mixture}
+\end{figure}
+
+在许多常见的机器学习模型当中，根据多个变量的条件依赖关系，可以用上面这样的有向图模型来比较清晰地表达整体的联合分布。有向图模型表达的信息是：图中的每一个节点代表一个随机变量，而给定了该变量所有入边对应的起始节点后，该变量的分布与其他所有变量都条件无关。需要指出，有向图模型本身只给出了条件依赖关系，并没有明确各条件分布的形式。一般来说，我们在工程中的思路中用图模型来表达我们先验的变量结构关系，然后对每个条件分布选取合适的指数族分布来建模，而混合分布模型就是了解这种工程思路的最典型例子。按照上面的有向图模型表示，我们引入了Multinomial变量$z = (z_1, \cdots, z_K)^T$ 来明确表示状态，可以把混合分布改写成结构更清晰的表达式：
+\begin{equation}
+p(\boldsymbol x | \boldsymbol w, \boldsymbol \Theta)= \sum_z \prod_k w_k^{z_k} \left\{ h(\boldsymbol x) g(\boldsymbol \theta_k)\exp\{\boldsymbol \theta_k^\top \textrm{u}(\boldsymbol x)\}\right\}^{z_k}
+\end{equation}
+
+在混合模型的最大似然求解过程中，EM(Expectation-Maximization)算法起着非常重要的作用。从上面的概率图模型例子可以看出，除了要求解的参数$\boldsymbol w, \boldsymbol \Theta$ 和观测到的变量$x$，还存在一个变量$z$，我们把这样的变量称为隐变量(Hidden Variable)。EM算法就是为了解决有隐变量存在时的最大似然估计问题的。这是一种迭代的算法，每个迭代又可以分为E-step和M-step，在E-step阶段，我们将参数变量和观测变量都固定，得到隐变量的后验分布；而在M-step，我们将用得到的隐变量的后验分布和观测变量再去更新参数变量。以上面的混合分布问题为例，我们在EM算法的每一步迭代当中，都转而求解下面的辅助函数优化问题：
+\begin{eqnarray}\label{def}
+\max_{w, \theta} Q(w, \theta; w^{\textrm{old}}, \theta^{\textrm{old}}) &=& \max_{w, \theta}
+\sum_{z} p(z|
+\boldsymbol X, w^{\textrm{old}}, \boldsymbol \theta^{\textrm {old}}) \ln p(\boldsymbol
+X, w, \boldsymbol \theta|z)
+\end{eqnarray}
+由于此时的隐变量$z$是离散的，因此等式右边为求和的形式，如果在其他问题中遇到的隐变量是连续的，那么只需要将求和号换成积分号即可。
+
+对应于公式\ref{def}，指数族混合分布EM算法的E-step和M-step可以很容易求出，其结果如下式：
+\begin{equation}
+\textrm{E-step:} \quad \gamma_i(k) \triangleq p(z_k = 1 | \Theta^{\textrm{old}}, w^{\textrm{old}}, x_i) = \frac{w_k^{\textrm{old}} g(\boldsymbol \theta_k^{\textrm{old}})\exp\{\textrm{u}^\top(\boldsymbol x_i)\boldsymbol \theta_k^{\textrm{old}} \}}{\sum_l w_l^{\textrm{old}} g(\boldsymbol \theta_l^{\textrm{old}})\exp\{\textrm{u}^\top(\boldsymbol x_i)\boldsymbol \theta_l^{\textrm{old}} \}}
+\end{equation}
+\begin{eqnarray}
+\textrm{M-step:} \quad &-\nabla \ln g(\theta_k^{\textrm{new}}) = \frac{1}{N}\sum_{i=1}^N \gamma_i(k) \textrm{u}(x_i)\qquad\qquad\qquad\qquad\qquad\qquad\nonumber \\
+&w_k^{\textrm{new}} = \frac{1}{N}\sum_{i=1}^N \gamma_i(k) \qquad \qquad \quad \qquad\qquad\qquad\qquad\qquad\qquad
+\end{eqnarray}
+在混合分布的情形下，这样的一种分解使得许多非指数族分布的模型再进行最大似然估计时，其M-step形式上与简单的指数族分布是一致的，这也使得指数族分布工程上的便利性得以继续发挥。虽然M-step的形势与指数族最大似然估计的形式\ref{ML}非常相近，我们却不宜将等式右边的部分也称为充分统计量，因为这一过程是迭代进行的，需要多次访问数据才能完成最大似然估计，因此，简单地称其为统计量更为准确。
+
+指数族分布的混合模型在工程中的应用同样很广泛，只要是单模态分布不易刻划的数据分布，都可以考虑用某种指数族分布叠加的方式来更精确地建模。常见的混合模型，例如高斯混合模型(Mixture of Gaussians, MoG)，以及PLSI(Probabilistic Latent Semantic Index)，后这可以认为是建立在Multinomial分布基础上的混合模型，在文本主题分析中有着广泛的应用。
+
+需要注意的是，指数族混合分布的EM算法只是EM算法的一种较简单的特殊情况，这一算法广泛应用于各种隐变量存在的统计模型训练中，有关这方面更详细的理论和应用介绍，请大家参看\cite{Dempster}和\cite{Bishop}中更多的介绍。
+
+\subsubsection{贝叶斯学习}
+
+以上讨论的模型参数估计方法，都是在最大似然准则下进行的。最大似然准则，是把模型的参数看成固定的，然后找到使得训练数据上似然值最大的参数，这是一种参数点估计(Point Estimation)的方法。这样的点估计方法，在实际中如果遇到数据样本不足的情形，往往会产生比较大的估计偏差。对此，工程上常常用到贝叶斯学习(Beyes Learning)的方法论。为了介绍贝叶斯学习的基本概念，我们先从下面的贝叶斯公式入手了解一下其中的关键概念：
+\begin{equation}\label{Bayes}
+    \underbrace{P(\boldsymbol \theta|D)}_{\textrm{posterior}} =
+    \frac{\overbrace{p(D|\boldsymbol \theta)}^{\textrm{likelihood}}\overbrace{p(\boldsymbol \theta)}^{\textrm{prior}}}{\underbrace{p(D)}_{\textrm{evidence}}}
+\end{equation}
+在贝叶斯体系下，模型参数$\theta$不再被认为是固定不变的量，而是服从一定分布的随机变量。在没有数据支持的情况下，我们对其有一个假设性的分布$p(\theta)$，这称为先验分布(Prior)，而在观测到数据集$D=\{x_1, \cdots, x_N\}$以后，根据数据集上表现出来的似然值(Likelihood)$p(D|\theta)$，我们可以得到调整后的后验分布$p(\theta|D)$。先验分布、后验分布和似然值之间的变换关系，就通过上面的贝叶斯公式表达出来。等式右侧的分母项，也是贝叶斯学习中的一个重要概念，称为Evidence，它可以展开表示为$p(D) = \int p(D|\theta) p(\theta) \textrm{d} \theta$。由贝叶斯公式和这些重要概念出发，我们将三种常见的模型估计方法对比在下面的表中：
+\begin{table}
+  \caption{若干常见模型估计方法}
+  \begin{center}
+    \begin{tabular}{|c|c|c|c|c|}
+      \hline
+      % after \\: \hline or \cline{col1-col2} \cline{col3-col4} ...
+       & 参数估计 & 预测 \\
+      \hline
+      ML    & $\hat{\boldsymbol \theta}^{\textrm{ML}}_{D} = \arg\max_{\boldsymbol \theta} p(D|\boldsymbol \theta)$ & $p(\boldsymbol o|D) = p(\boldsymbol o|\hat{\boldsymbol \theta}^{\textrm{ML}}_D)$ \\
+      \hline
+      Bayes & $p(\boldsymbol \theta| D) = p(D|\boldsymbol \theta) p(\boldsymbol \theta)$ & $p(\boldsymbol o|D) = \int p(\boldsymbol o|\boldsymbol \theta) p(\boldsymbol \theta|D) \textrm{d}\boldsymbol \theta$ \\
+      \hline
+      MAP   & $\hat{\boldsymbol \theta}^{\textrm{MAP}}_{D} = \arg\max_{\boldsymbol \theta} p(\boldsymbol \theta|D)$ & $p(\boldsymbol o| D) = p(\boldsymbol o|\hat{\boldsymbol \theta}^{\textrm{MAP}}_{D})$ \\
+      \hline
+    \end{tabular}
+  \end{center}
+  \label{table_est}
+\end{table}
+
+概率统计模型有两个主要任务：一是参数估计(Parameter Estimation)，二是预测(Prediction)。其中第二项任务指的是给定一组训练数据$D$，评估某新的观测数据$o$的概率。在最大似然体系中，参数估计是根据似然值最大化得到的点估计，而预测过程就直接利用估计出来的参数计算新的似然值即可。而在贝叶斯体系中，参数的点估计为其后验分布所代替，也就意味着参数在估计结果中具有不确定性(Uncertainty)，于是，在预测过程中，需要用积分的方式将不同参数的可能性都加以考虑，这是两者非常本质的差别。还有一种常见的参数估计方法，称为最大后验概率(Maximum a Posterior, MAP)方法，本质上也是点估计方法，只不过同样引入了先验部分来对参数作规范化，因此，其参数估计形式上是对贝叶斯后验概率求极值，而预测过程则与最大似然情形一样。
+
+\subsubsection{共轭先验}
+
+贝叶斯方法的关键问题，是如何选择公式\ref{Bayes}中的先验分布$p(\theta)$，这一点两层含义：一是如何选择先验分布的形式，而是如何确定先验分布中的参数。之所以要讨论这个问题，是因为虽然先验分布的形式是我们选择的，但后验分布$p(D|\theta)$的形式却无法选择，而后验分布才是在使用中关键的分布，其形式如果过于复杂，会给实际应用带来很大困难。如果我们能够找到一种先验分布，使得相应的后验分布也具有同样的形式，无疑是最方便的。满足这种条件的先验分布，我们就称为共轭先验(Conjugate Prior)。
+
+对于指数族分布的似然函数而言，可以很容易地发现共轭先验总是存在的，这又一次证明了指数族分布在工程上带来的便捷性。对于公式\ref{exp}给出的指数族分布形式，其共轭先验分布可以一般性地写成：
+\begin{equation}\label{conj}
+p(\boldsymbol \theta|\boldsymbol \eta) = \exp\left\{\boldsymbol \chi^\top \boldsymbol \theta - \nu g(\boldsymbol \theta)- b(\boldsymbol \chi, \nu)\right\}
+\end{equation}
+值得注意，这一指数族分布的共轭先验分布，仍然是指数组的形式，其用到的数学工具也就与前面的讨论一致。这一先验分布的参数$\eta=\{\chi, \nu\}$，我们称之为超参数(Hyper-perrameter)，这一$\eta$的具体值实际控制着先验分布的具体形状。
+
+将前文介绍的几种典型指数族分布与这一共轭先验通式相对照，我们可以得到其对应的共轭先验：1. 对于Gauss分布，如果仅仅考虑其均值的不确定性，则对应的共轭先验仍然是Gauss分布；2. 对于Gamma分布，其对应的共轭先验称为Wishart分布；3. 对于Multinomial分布，其对应的共轭先验是Dirichlet分布。Multinomial-Dirichlet这一共轭对是后文介绍的文本主题分析中非常重要的分布形式。
+
+当模型为指数族分布，并选择共轭先验的情形下，对应的后验分布$p(\theta|D)$可以很简单地写成下面的形式：
+\begin{eqnarray}\label{post}
+\tilde \chi& = & \chi + \sum_{i=1}^N \textrm{u}(x_i) \\
+\tilde \nu & = &\nu + N
+\end{eqnarray}
+这里我们用变量上的波浪线代表后验。我们又一次看到，指数族分布的充分统计量在这里仍然发挥了核心作用，其结果是使得贝叶斯学习中得到后验概率的计算非常简便。需要特别指出的是，选择共轭的先验形式，从贝叶斯体系来看并没有太多理论上的必然性，而主要是为了满足工程上的方便性。因此，可以认为这完全是一种工程性的方案。
+
+同样是从工程上来说，我们采用贝叶斯方案的目的，是为了具体的对模型参数进行约束，以提高估计的稳健型。因此，对超参数分参数的选择同样十分关键，因为超参数的具体取值决定了模型参数的自由程度。在实际应用中，我们可以根据一些领域知识和经验来设定超参数值，但是这样的方法有两个问题：1. 当模型过于复杂，超参数数目太多时，不太可能都根据经验相对合理地设定超参数。2. 采用这种主观的的方式设定超参数，必然导致在一个固定的数据集上，参数估计的结果会随着主观超参数的不同而变化，这有些背离数据建模的客观性。因此，我们有必要探索一种数据驱动的超参数设定方法。
+
+\subsubsection{经验贝叶斯}
+
+数据读懂的超参数决定方法中，经验贝叶斯的方法值得大家注意。在公式\ref{Bayes}中，右边的分母，即evidence，是将模型参数积分后的似然值的期望。我们注意到，在似然值和先验部分的形式确定的前提下，evidence仅仅是先验部分的函数。从概念上来看，如果把evidence认为是超参数对应的似然值，我们也可以用优化evidence的方式来找到最优的超参数。这种根据数据来确定超参数的方法，就称为经验贝叶斯，其优化问题可以表示为：
+\begin{equation}\label{evidence}
+    \hat {\boldsymbol \eta} = \arg \max_{\boldsymbol \eta} \int \prod_{i = 1}^K p(X_i|\boldsymbol \theta_i) p(\boldsymbol \theta_i|\boldsymbol \eta) \textrm{d}\boldsymbol \theta_i \nonumber
+\end{equation}
+由于是根据evidence来确定超参数，这一方法框架又称为Evidence Framework。需要说明，Evidence Framework除了能够用于确定超参数，同样可以用于在若干种先验部分形式中做选择，选择标准仍然是判断各种分布的evidence的大小。上式中还有一点需要特别注意，那就是我们是假设$i=1, \cdots, K$个模型共享同一个先验分布。从后文的讨论可以得知，只有当$K>1$的时候，上面的经验贝叶斯问题才会有非退化的解。
+
+一般来说，公式\ref{evidence}是一个比较复杂的优化问题。不过在指数族分布的情形下，个优化问题仍然有着比较清晰地解法思路：我们注意到在公式\ref{evidence}中，$X$为观测量，$\eta$为参数，而$\theta$实际上是隐变量。因此，最直接的思路仍然是使用EM算法来求解。当$p(x|\theta)$为指数族分布，而$p(\theta|\eta)$为其共轭先验分布时，对应的EM辅助函数可以写成下面的表达形式：
+\begin{eqnarray}\label{def}
+Q(\boldsymbol \eta, \boldsymbol \eta^{\textrm {old}}) &=&
+\sum_{i=1}^K \int_{\boldsymbol \theta_i} p(\boldsymbol \theta_i |
+\boldsymbol X_i, \boldsymbol \eta^{\textrm {old}}) \ln p(\boldsymbol
+X_i, \boldsymbol \theta_i|\boldsymbol \eta) \textrm{d} \boldsymbol
+\theta_i \nonumber \\
+&=& \sum_{i=1}^K \int_{\boldsymbol \theta_i} p(\boldsymbol \theta_i
+| \boldsymbol X_i, \boldsymbol \eta^{\textrm {old}}) \ln
+p(\boldsymbol \theta_i | \boldsymbol \eta) \textrm{d} \boldsymbol
+\theta_i + \textrm{const}\nonumber \\
+&=& \sum_{i=1}^K \int_{\boldsymbol \theta_i} p(\boldsymbol \theta_i | \boldsymbol {\tilde{\boldsymbol
+\eta}}_i^{\textrm {old}})  \ln
+p(\boldsymbol \theta_i | \boldsymbol \eta) \textrm{d} \boldsymbol
+\theta_i + \textrm{const}
+\end{eqnarray}
+请注意我们在这里用到了共轭先验的性质，即后验分布有着与先验分布一样的行为，并且将地$i$个模型的后验超参数记为$\boldsymbol {\tilde{\boldsymbol
+\eta}}_i^{\textrm {old}}$。仔细观察这一结果，如果我们把$\theta$当成数据，$\eta$当成参数，那么已知的后验分布$\frac{1}{K} \sum_{i=1}^K p(\boldsymbol \theta_i | \boldsymbol {\tilde{\boldsymbol \eta}}_i^{\textrm {old}})$可以看成是数据的分布，而$\ln
+p(\boldsymbol \theta_i | \boldsymbol \eta)$则相当于参数$\eta$在此数据集上对应的似然值。于是，对此辅助函数的优化，相当于是在此数据分布上对$\eta$进行最大似然估计。又由于$p(\theta|\eta)$也是指数族分布，其最大似然估计可以通过充分统计量得到。因此，易于验证，该经验贝叶斯问题的E-step和M-step可以表示成下面的形式：
+\begin{equation}
+\textrm{E-step:} \quad \tilde \chi^{\textrm{old}} = \chi^{\textrm{old}} + \sum_{i=1}^N \textrm{u}(x_i), \quad \tilde \nu^{\textrm{old}}  = \nu^{\textrm{old}} + N \quad \nonumber
+\end{equation}
+\begin{equation}
+\textrm{M-step:} \quad \left \langle
+  \theta, g(\theta)
+\right \rangle_{p(\boldsymbol \theta|\boldsymbol
+\eta^{\textrm{new}})}=\frac{1}{K}\sum_{k=1}^K \left \langle
+  \theta, g(\theta)
+\right \rangle_{p(\boldsymbol \theta|\tilde{\boldsymbol
+\eta}_k^{\textrm{old}})}
+\end{equation}
+其中的E-step就是采用共轭先验的情形下后验的计算公式，而M-step是一个关于$\eta^{\textrm{new}}$的方程，此方程是否有闭式解，要根据具体的指数族形式而定。
+
+在上面介绍的一些典型机器学习方法当中，可以发现指数族分布及其充分统计量在计算流程中起着非常关键的枢纽作用。我们可以注意到，不论是指数族分布的最大似然解，指数族混合分布的最大似然解，还是指数族分布的贝叶斯学习，如果采用map/reduce的计算框架，都可以用图\ref{fig_proc}来描述。
+\begin{figure}\label{fig_proc}
+\centering
+\scalebox{0.6}
+{
+    \includegraphics[width=1.1\textwidth]{process.eps}
+}
+\caption{指数族分布map/reduce学习框架}
+\end{figure}
+
+从这一计算流程可以看出，对于大规模数据上的许多机器学习计算问题，map/reduce是一个可行的选择：因为在机器之间交换的数据只是统计量或者充分统计量，其空间复杂度仅仅与模型的参数数目有关，与数据的多少并无直接关系。因此，不论多大规模的数据集合，总是可以利用map/reduce得到一个可行的解决方案。不过，当算法需要多次迭代才能完成的时候，由于需要在每次map过程中重新加载数据，使得整个过程的I/O负担变得较重，从而降低整个计算过程的效率。可以说，对大规模数据上的指数族分布相关参数估计问题，map/reduce是一个通用的可行方案，但是并不是最高效的方案。当数据的规模可以承受时，可以考虑类似于spark之类的更加高效的计算框架。对然这里的分析主要是针对上面指数族分布相关的估计问题，但是对于一般的基于梯度的优化问题也同样成立。
+
+\subsubsection{变分法}
+
+
+\clearpage{\pagestyle{empty}} %\cleardoublepage
+
+\end{CJK*}
