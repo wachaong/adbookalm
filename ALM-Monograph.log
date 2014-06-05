@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9) (preloaded format=latex 2014.4.12)  23 MAY 2014 16:38
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9) (preloaded format=latex 2014.6.5)  5 JUN 2014 13:41
 entering extended mode
 **ALM-Monograph.tex
 (D:\coolpan\adbookNew\ALM-Monograph.tex
@@ -1085,47 +1085,47 @@ File: GD.eps Graphic file (type eps)
 <GD.eps> [73]
 File: Allocation.eps Graphic file (type eps)
  <Allocation.eps> [74] [75] [76] [77] [78] [79] [80] [81] [82]
-[83] [84]) (D:\coolpan\adbookNew\ch9.tex
-Chapter 3.
-[85
+[83] [84] [85]) (D:\coolpan\adbookNew\ch9.tex [86
 
 
 
 
 
 ]
+Chapter 3.
+[87]
 File: target.eps Graphic file (type eps)
- <target.eps> [86] [87] [88] [89]
+ <target.eps> [88] [89] [90] [91]
 File: contextual.eps Graphic file (type eps)
- <contextual.eps> [90] [91] [92]
+ <contextual.eps> [92] [93] [94]
 File: decay.eps Graphic file (type eps)
 
-<decay.eps> [93] [94] [95]
+<decay.eps> [95] [96] [97]
 File: reachctr.eps Graphic file (type eps)
- <reachctr.eps> [96] [97] [98] [99] [100])
+ <reachctr.eps> [98] [99] [100] [101] [102])
 (D:\coolpan\adbookNew\ch10.tex
 Chapter 4.
-[101
+[103
 
 
 
 
 
-] [102] [103] [104]
+] [104] [105] [106]
 File: AdNet.eps Graphic file (type eps)
- <AdNet.eps> [105] [106] [107] [108] [109] [110]
-[111] [112] [113] [114] [115] [116] [117] [118] [119] [120] [121] [122]
-[123] [124] [125] [126]
+ <AdNet.eps> [107] [108] [109] [110] [111] [112]
+[113] [114] [115] [116] [117] [118] [119] [120] [121] [122] [123] [124]
+[125] [126] [127] [128]
 File: rare.eps Graphic file (type eps)
- <rare.eps> [127] [128] [129] [130] [131]
+ <rare.eps> [129] [130] [131] [132] [133]
 File: PR.eps Graphic file (type eps)
  <PR.eps>
 File: ROC.eps Graphic file (type eps)
 
-<ROC.eps> [132] [133] [134] [135] [136] [137] [138]
+<ROC.eps> [134] [135] [136] [137] [138] [139] [140]
 File: ss.eps Graphic file (type eps)
- <ss.eps> [139] [140]
-[141] [142] [143]) (D:\coolpan\adbookNew\ch11.tex [144
+ <ss.eps> [141] [142]
+[143] [144] [145]) (D:\coolpan\adbookNew\ch11.tex [146
 
 
 
@@ -1134,21 +1134,21 @@ File: ss.eps Graphic file (type eps)
 ]
 Chapter 5.
 File: DSP.eps Graphic file (type eps)
-<DSP.eps> [145]
+<DSP.eps> [147]
 File: DMP.eps Graphic file (type eps)
  <DMP.eps>
 File: Adx.eps Graphic file (type eps)
  <Adx.eps>
 File: RTB.eps Graphic file (type eps)
- <RTB.eps> [146] [147]
+ <RTB.eps> [148] [149]
 File: ckmapping-2domain.eps Graphic file (type eps)
 
-<ckmapping-2domain.eps> [148]
+<ckmapping-2domain.eps> [150]
 File: ckmapping-3domain.eps Graphic file (type eps)
- <ckmapping-3domain.eps> [149] [150])
+ <ckmapping-3domain.eps> [151] [152])
 (D:\coolpan\adbookNew\ch12.tex
 Chapter 6.
-[151
+[153
 
 
 
@@ -1156,15 +1156,15 @@ Chapter 6.
 
 ]
 File: creative.eps Graphic file (type eps)
- <creative.eps> [152] [153]
+ <creative.eps> [154] [155]
 File: creative.eps Graphic file (type eps)
- <creative.eps> [154] [155] [156] [157])
-[158
+ <creative.eps> [156] [157] [158] [159])
+[160
 
 
 
 
-] [159] [160] [161] (D:\coolpan\adbookNew\ALM-Monograph.aux
+] [161] [162] [163] (D:\coolpan\adbookNew\ALM-Monograph.aux
 (D:\coolpan\adbookNew\preface.aux) (D:\coolpan\adbookNew\ch1.aux)
 (D:\coolpan\adbookNew\ch2.aux) (D:\coolpan\adbookNew\ch3.aux)
 (D:\coolpan\adbookNew\ch4.aux) (D:\coolpan\adbookNew\ch5.aux)
@@ -1177,12 +1177,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 11762 strings out of 495355
- 157478 string characters out of 3183882
- 398567 words of memory out of 3000000
- 14513 multiletter control sequences out of 15000+200000
- 94002 words of font info for 302 fonts, out of 3000000 for 9000
+ 11779 strings out of 495355
+ 157817 string characters out of 3183883
+ 398566 words of memory out of 3000000
+ 14530 multiletter control sequences out of 15000+200000
+ 94300 words of font info for 303 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
  37i,17n,62p,1443b,2600s stack positions out of 5000i,500n,10000p,200000b,50000s
 
-Output written on ALM-Monograph.dvi (173 pages, 856496 bytes).
+Output written on ALM-Monograph.dvi (175 pages, 866464 bytes).

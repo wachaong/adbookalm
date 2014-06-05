@@ -85,7 +85,7 @@
 \contentsline {subsubsection}{变分法}{71}
 \contentsline {chapter}{\numberline {2}合约广告中的核心技术}{73}
 \contentsline {section}{\numberline {2.1}广告投放机系统架构}{73}
-\contentsline {section}{\numberline {2.2}在线分配问题}{74}
+\contentsline {section}{\numberline {2.2}在线分配问题描述}{74}
 \contentsline {subsection}{\numberline {2.2.1}在线分配问题表达}{74}
 \contentsline {subsubsection}{供给与需求二部图}{74}
 \contentsline {subsubsection}{需求约束}{75}
@@ -95,94 +95,99 @@
 \contentsline {subsubsection}{GD问题}{76}
 \contentsline {subsubsection}{MRA问题}{77}
 \contentsline {subsubsection}{Ad words问题}{77}
-\contentsline {subsection}{\numberline {2.2.3}最差性能研究}{77}
-\contentsline {subsection}{\numberline {2.2.4}基于流量预测的方案}{79}
-\contentsline {subsubsection}{HWM算法}{80}
-\contentsline {section}{\numberline {2.3}流量预测}{82}
-\contentsline {section}{\numberline {2.4}频次控制}{83}
-\contentsline {chapter}{\numberline {3}受众定向核心技术}{85}
-\contentsline {section}{\numberline {3.1}定向方法综述}{86}
-\contentsline {section}{\numberline {3.2}上下文定向}{89}
-\contentsline {subsection}{\numberline {3.2.1}半在线抓取系统}{89}
-\contentsline {section}{\numberline {3.3}行为定向}{90}
-\contentsline {subsection}{\numberline {3.3.1}受众定向标签体系}{91}
-\contentsline {section}{\numberline {3.4}行为定向数据来源}{91}
-\contentsline {subsection}{\numberline {3.4.1}行为定向建模问题}{92}
-\contentsline {subsection}{\numberline {3.4.2}行为定向特征生成}{93}
-\contentsline {subsection}{\numberline {3.4.3}行为定向计算过程}{95}
-\contentsline {subsection}{\numberline {3.4.4}行为定向的评测}{96}
-\contentsline {section}{\numberline {3.5}文本主题挖掘}{97}
-\contentsline {subsection}{\numberline {3.5.1}无监督主题模型}{97}
-\contentsline {subsubsection}{LSA模型}{98}
-\contentsline {subsubsection}{PLSI模型和GaP模型}{98}
-\contentsline {subsubsection}{LDA模型}{99}
-\contentsline {subsection}{\numberline {3.5.2}有监督主题模型}{100}
-\contentsline {chapter}{\numberline {4}竞价广告核心技术}{101}
-\contentsline {section}{\numberline {4.1}位置拍卖市场}{101}
-\contentsline {subsection}{\numberline {4.1.1}定价策略}{102}
-\contentsline {subsubsection}{广义第二高价}{102}
-\contentsline {subsubsection}{VCG定价}{103}
-\contentsline {subsection}{\numberline {4.1.2}市场保留价}{103}
-\contentsline {subsection}{\numberline {4.1.3}价格挤压}{104}
-\contentsline {subsection}{\numberline {4.1.4}整体竞价和计价过程}{104}
-\contentsline {section}{\numberline {4.2}广告网络系统架构}{105}
-\contentsline {section}{\numberline {4.3}广告检索}{106}
-\contentsline {subsection}{\numberline {4.3.1}布尔表达式的检索}{107}
-\contentsline {subsection}{\numberline {4.3.2}WAND算法}{111}
-\contentsline {subsection}{\numberline {4.3.3}线性评价函数的意义}{113}
-\contentsline {subsection}{\numberline {4.3.4}搜索广告的检索}{113}
-\contentsline {section}{\numberline {4.4}广告排序概述}{113}
-\contentsline {section}{\numberline {4.5}点击率预测模型:逻辑回归}{114}
-\contentsline {subsection}{\numberline {4.5.1}广义线性模型视角}{115}
-\contentsline {subsection}{\numberline {4.5.2}最大熵视角}{115}
-\contentsline {subsection}{\numberline {4.5.3}基本优化算法}{115}
-\contentsline {subsection}{\numberline {4.5.4}信任域法}{119}
-\contentsline {subsection}{\numberline {4.5.5}ADMM计算框架}{123}
-\contentsline {subsection}{\numberline {4.5.6}点击率模型的校正}{127}
-\contentsline {section}{\numberline {4.6}点击率模型举例:GBDT}{128}
-\contentsline {subsection}{\numberline {4.6.1}点击率预测特征}{128}
-\contentsline {subsubsection}{点击率特征的构成}{128}
-\contentsline {subsubsection}{静态与动态特征}{128}
-\contentsline {subsubsection}{位置偏差与CoEC}{129}
-\contentsline {subsubsection}{常见的偏差特征}{130}
-\contentsline {subsubsection}{点击反馈的平滑}{131}
-\contentsline {subsection}{\numberline {4.6.2}点击率预测评测}{132}
-\contentsline {subsection}{\numberline {4.6.3}智能频次控制}{135}
-\contentsline {subsection}{\numberline {4.6.4}探索与利用}{136}
-\contentsline {subsubsection}{UCB方法}{137}
-\contentsline {subsubsection}{Contextual Bandit}{137}
-\contentsline {section}{\numberline {4.7}点击价值估计}{138}
-\contentsline {section}{\numberline {4.8}搜索广告特定领域核心技术}{138}
-\contentsline {subsection}{\numberline {4.8.1}搜索广告系统架构}{139}
-\contentsline {subsection}{\numberline {4.8.2}搜索广告概览}{139}
-\contentsline {subsection}{\numberline {4.8.3}短时行为反馈}{140}
-\contentsline {subsection}{\numberline {4.8.4}流式计算平台}{141}
-\contentsline {subsection}{\numberline {4.8.5}关键词推荐}{141}
-\contentsline {subsection}{\numberline {4.8.6}竞价优化}{141}
-\contentsline {subsection}{\numberline {4.8.7}查询扩展}{141}
-\contentsline {subsubsection}{基于推荐的方法}{142}
-\contentsline {subsubsection}{SVD++}{142}
-\contentsline {subsubsection}{基于主题模型的方法}{142}
-\contentsline {subsubsection}{基于历史效果的方法}{143}
-\contentsline {subsection}{\numberline {4.8.8}广告条数个性化}{143}
-\contentsline {chapter}{\numberline {5}广告交易市场核心技术}{145}
-\contentsline {section}{\numberline {5.1}DSP系统架构}{145}
-\contentsline {section}{\numberline {5.2}数据管理平台DMP架构}{146}
-\contentsline {section}{\numberline {5.3}实时竞价系统架构}{146}
-\contentsline {section}{\numberline {5.4}实时竞价流程}{147}
-\contentsline {section}{\numberline {5.5}Cookie Mapping}{148}
-\contentsline {section}{\numberline {5.6}询价优化}{150}
-\contentsline {chapter}{\numberline {6}广告其他相关技术}{151}
-\contentsline {section}{\numberline {6.1}创意优化}{152}
-\contentsline {section}{\numberline {6.2}流量保护和效果监测}{152}
-\contentsline {subsection}{\numberline {6.2.1}爬虫流量去除}{153}
-\contentsline {subsection}{\numberline {6.2.2}反作弊}{153}
-\contentsline {subsection}{\numberline {6.2.3}效果监测}{154}
-\contentsline {subsection}{\numberline {6.2.4}广告安全}{154}
-\contentsline {section}{\numberline {6.3}隐私保护和数据安全}{154}
-\contentsline {subsection}{\numberline {6.3.1}用户身份标识}{155}
-\contentsline {subsection}{\numberline {6.3.2}去匿名化技术及应用}{156}
-\contentsline {subsection}{\numberline {6.3.3}RTB中的数据安全问题}{156}
-\contentsline {section}{\numberline {6.4}SoLoMo时代的广告}{157}
-\contentsline {subsection}{\numberline {6.4.1}移动广告}{157}
-\contentsline {subsection}{\numberline {6.4.2}社交广告}{157}
+\contentsline {section}{\numberline {2.3}在线分配问题求解}{77}
+\contentsline {subsection}{\numberline {2.3.1}求解原问题的原始分配方案}{78}
+\contentsline {subsection}{\numberline {2.3.2}求解对偶问题的紧凑分配方案}{78}
+\contentsline {subsection}{\numberline {2.3.3}启发式的分配方案HWM}{79}
+\contentsline {subsection}{\numberline {2.3.4}综合分配方案Shale}{82}
+\contentsline {subsection}{\numberline {2.3.5}最差分配性能研究}{82}
+\contentsline {section}{\numberline {2.4}流量预测}{83}
+\contentsline {subsection}{\numberline {2.4.1}基于时间序列的流量预测}{83}
+\contentsline {subsection}{\numberline {2.4.2}基于检索的流量预测}{83}
+\contentsline {section}{\numberline {2.5}频次控制}{84}
+\contentsline {chapter}{\numberline {3}受众定向核心技术}{87}
+\contentsline {section}{\numberline {3.1}定向方法综述}{88}
+\contentsline {section}{\numberline {3.2}上下文定向}{91}
+\contentsline {subsection}{\numberline {3.2.1}半在线抓取系统}{91}
+\contentsline {section}{\numberline {3.3}行为定向}{92}
+\contentsline {subsection}{\numberline {3.3.1}受众定向标签体系}{93}
+\contentsline {section}{\numberline {3.4}行为定向数据来源}{93}
+\contentsline {subsection}{\numberline {3.4.1}行为定向建模问题}{94}
+\contentsline {subsection}{\numberline {3.4.2}行为定向特征生成}{95}
+\contentsline {subsection}{\numberline {3.4.3}行为定向计算过程}{97}
+\contentsline {subsection}{\numberline {3.4.4}行为定向的评测}{98}
+\contentsline {section}{\numberline {3.5}文本主题挖掘}{99}
+\contentsline {subsection}{\numberline {3.5.1}无监督主题模型}{99}
+\contentsline {subsubsection}{LSA模型}{100}
+\contentsline {subsubsection}{PLSI模型和GaP模型}{100}
+\contentsline {subsubsection}{LDA模型}{101}
+\contentsline {subsection}{\numberline {3.5.2}有监督主题模型}{102}
+\contentsline {chapter}{\numberline {4}竞价广告核心技术}{103}
+\contentsline {section}{\numberline {4.1}位置拍卖市场}{103}
+\contentsline {subsection}{\numberline {4.1.1}定价策略}{104}
+\contentsline {subsubsection}{广义第二高价}{104}
+\contentsline {subsubsection}{VCG定价}{105}
+\contentsline {subsection}{\numberline {4.1.2}市场保留价}{105}
+\contentsline {subsection}{\numberline {4.1.3}价格挤压}{106}
+\contentsline {subsection}{\numberline {4.1.4}整体竞价和计价过程}{106}
+\contentsline {section}{\numberline {4.2}广告网络系统架构}{107}
+\contentsline {section}{\numberline {4.3}广告检索}{108}
+\contentsline {subsection}{\numberline {4.3.1}布尔表达式的检索}{109}
+\contentsline {subsection}{\numberline {4.3.2}WAND算法}{113}
+\contentsline {subsection}{\numberline {4.3.3}线性评价函数的意义}{115}
+\contentsline {subsection}{\numberline {4.3.4}搜索广告的检索}{115}
+\contentsline {section}{\numberline {4.4}广告排序概述}{115}
+\contentsline {section}{\numberline {4.5}点击率预测模型:逻辑回归}{116}
+\contentsline {subsection}{\numberline {4.5.1}广义线性模型视角}{117}
+\contentsline {subsection}{\numberline {4.5.2}最大熵视角}{117}
+\contentsline {subsection}{\numberline {4.5.3}基本优化算法}{117}
+\contentsline {subsection}{\numberline {4.5.4}信任域法}{121}
+\contentsline {subsection}{\numberline {4.5.5}ADMM计算框架}{125}
+\contentsline {subsection}{\numberline {4.5.6}点击率模型的校正}{129}
+\contentsline {section}{\numberline {4.6}点击率模型举例:GBDT}{130}
+\contentsline {subsection}{\numberline {4.6.1}点击率预测特征}{130}
+\contentsline {subsubsection}{点击率特征的构成}{130}
+\contentsline {subsubsection}{静态与动态特征}{130}
+\contentsline {subsubsection}{位置偏差与CoEC}{131}
+\contentsline {subsubsection}{常见的偏差特征}{132}
+\contentsline {subsubsection}{点击反馈的平滑}{133}
+\contentsline {subsection}{\numberline {4.6.2}点击率预测评测}{134}
+\contentsline {subsection}{\numberline {4.6.3}智能频次控制}{137}
+\contentsline {subsection}{\numberline {4.6.4}探索与利用}{138}
+\contentsline {subsubsection}{UCB方法}{139}
+\contentsline {subsubsection}{Contextual Bandit}{139}
+\contentsline {section}{\numberline {4.7}点击价值估计}{140}
+\contentsline {section}{\numberline {4.8}搜索广告特定领域核心技术}{140}
+\contentsline {subsection}{\numberline {4.8.1}搜索广告系统架构}{141}
+\contentsline {subsection}{\numberline {4.8.2}搜索广告概览}{141}
+\contentsline {subsection}{\numberline {4.8.3}短时行为反馈}{142}
+\contentsline {subsection}{\numberline {4.8.4}流式计算平台}{143}
+\contentsline {subsection}{\numberline {4.8.5}关键词推荐}{143}
+\contentsline {subsection}{\numberline {4.8.6}竞价优化}{143}
+\contentsline {subsection}{\numberline {4.8.7}查询扩展}{143}
+\contentsline {subsubsection}{基于推荐的方法}{144}
+\contentsline {subsubsection}{SVD++}{144}
+\contentsline {subsubsection}{基于主题模型的方法}{144}
+\contentsline {subsubsection}{基于历史效果的方法}{145}
+\contentsline {subsection}{\numberline {4.8.8}广告条数个性化}{145}
+\contentsline {chapter}{\numberline {5}广告交易市场核心技术}{147}
+\contentsline {section}{\numberline {5.1}DSP系统架构}{147}
+\contentsline {section}{\numberline {5.2}数据管理平台DMP架构}{148}
+\contentsline {section}{\numberline {5.3}实时竞价系统架构}{148}
+\contentsline {section}{\numberline {5.4}实时竞价流程}{149}
+\contentsline {section}{\numberline {5.5}Cookie Mapping}{150}
+\contentsline {section}{\numberline {5.6}询价优化}{152}
+\contentsline {chapter}{\numberline {6}广告其他相关技术}{153}
+\contentsline {section}{\numberline {6.1}创意优化}{154}
+\contentsline {section}{\numberline {6.2}流量保护和效果监测}{154}
+\contentsline {subsection}{\numberline {6.2.1}爬虫流量去除}{155}
+\contentsline {subsection}{\numberline {6.2.2}反作弊}{155}
+\contentsline {subsection}{\numberline {6.2.3}效果监测}{156}
+\contentsline {subsection}{\numberline {6.2.4}广告安全}{156}
+\contentsline {section}{\numberline {6.3}隐私保护和数据安全}{156}
+\contentsline {subsection}{\numberline {6.3.1}用户身份标识}{157}
+\contentsline {subsection}{\numberline {6.3.2}去匿名化技术及应用}{158}
+\contentsline {subsection}{\numberline {6.3.3}RTB中的数据安全问题}{158}
+\contentsline {section}{\numberline {6.4}SoLoMo时代的广告}{159}
+\contentsline {subsection}{\numberline {6.4.1}移动广告}{159}
+\contentsline {subsection}{\numberline {6.4.2}社交广告}{159}
