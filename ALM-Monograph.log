@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9) (preloaded format=latex 2014.6.5)  5 JUN 2014 13:41
+This is pdfTeX, Version 3.1415926-2.3-1.40.12 (MiKTeX 2.9) (preloaded format=latex 2014.7.28)  28 JUL 2014 18:20
 entering extended mode
 **ALM-Monograph.tex
 (D:\coolpan\adbookNew\ALM-Monograph.tex
@@ -899,12 +899,13 @@ File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 ) [9] [10] [11] [12] [13])
 \tf@toc=\write6
  [14]
+[15] [16
+
+
+]
 LaTeX Font Info:    Font shape `OT1/ptm/bx/n' in size <24.88> not available
 (Font)              Font shape `OT1/ptm/b/n' tried instead on input line 149.
-
-[1
-
-
+ [1
 
 
 ] [2] (D:\coolpan\adbookNew\ch1.tex
@@ -1084,48 +1085,53 @@ Chapter 2.
 File: GD.eps Graphic file (type eps)
 <GD.eps> [73]
 File: Allocation.eps Graphic file (type eps)
- <Allocation.eps> [74] [75] [76] [77] [78] [79] [80] [81] [82]
-[83] [84] [85]) (D:\coolpan\adbookNew\ch9.tex [86
+ <Allocation.eps> [74] [75] [76] [77] [78]
+File: shale.eps Graphic file (type eps)
+ <shale.eps>
+(C:\CTEX\MiKTeX\tex\latex\listings\lstlang1.sty
+File: lstlang1.sty 2004/09/05 1.3 listings language file
+) [79] [80] [81] [82] [83]
+[84] [85] [86] [87] [88] [89] [90]) (D:\coolpan\adbookNew\ch9.tex
+Chapter 3.
+[91
 
 
 
 
 
 ]
-Chapter 3.
-[87]
 File: target.eps Graphic file (type eps)
- <target.eps> [88] [89] [90] [91]
+ <target.eps> [92] [93] [94] [95]
 File: contextual.eps Graphic file (type eps)
- <contextual.eps> [92] [93] [94]
+ <contextual.eps> [96] [97] [98]
 File: decay.eps Graphic file (type eps)
 
-<decay.eps> [95] [96] [97]
+<decay.eps> [99] [100] [101]
 File: reachctr.eps Graphic file (type eps)
- <reachctr.eps> [98] [99] [100] [101] [102])
+ <reachctr.eps> [102] [103] [104] [105] [106])
 (D:\coolpan\adbookNew\ch10.tex
 Chapter 4.
-[103
+[107
 
 
 
 
 
-] [104] [105] [106]
+] [108] [109] [110]
 File: AdNet.eps Graphic file (type eps)
- <AdNet.eps> [107] [108] [109] [110] [111] [112]
-[113] [114] [115] [116] [117] [118] [119] [120] [121] [122] [123] [124]
-[125] [126] [127] [128]
+ <AdNet.eps> [111] [112] [113] [114] [115] [116]
+[117] [118] [119] [120] [121] [122] [123] [124] [125] [126] [127] [128]
+[129] [130] [131] [132]
 File: rare.eps Graphic file (type eps)
- <rare.eps> [129] [130] [131] [132] [133]
+ <rare.eps> [133] [134] [135] [136] [137]
 File: PR.eps Graphic file (type eps)
  <PR.eps>
 File: ROC.eps Graphic file (type eps)
 
-<ROC.eps> [134] [135] [136] [137] [138] [139] [140]
+<ROC.eps> [138] [139] [140] [141] [142] [143] [144]
 File: ss.eps Graphic file (type eps)
- <ss.eps> [141] [142]
-[143] [144] [145]) (D:\coolpan\adbookNew\ch11.tex [146
+ <ss.eps> [145] [146]
+[147] [148] [149]) (D:\coolpan\adbookNew\ch11.tex [150
 
 
 
@@ -1134,21 +1140,21 @@ File: ss.eps Graphic file (type eps)
 ]
 Chapter 5.
 File: DSP.eps Graphic file (type eps)
-<DSP.eps> [147]
+<DSP.eps> [151]
 File: DMP.eps Graphic file (type eps)
  <DMP.eps>
 File: Adx.eps Graphic file (type eps)
  <Adx.eps>
 File: RTB.eps Graphic file (type eps)
- <RTB.eps> [148] [149]
+ <RTB.eps> [152] [153]
 File: ckmapping-2domain.eps Graphic file (type eps)
 
-<ckmapping-2domain.eps> [150]
+<ckmapping-2domain.eps> [154]
 File: ckmapping-3domain.eps Graphic file (type eps)
- <ckmapping-3domain.eps> [151] [152])
+ <ckmapping-3domain.eps> [155] [156])
 (D:\coolpan\adbookNew\ch12.tex
 Chapter 6.
-[153
+[157
 
 
 
@@ -1156,15 +1162,15 @@ Chapter 6.
 
 ]
 File: creative.eps Graphic file (type eps)
- <creative.eps> [154] [155]
+ <creative.eps> [158] [159]
 File: creative.eps Graphic file (type eps)
- <creative.eps> [156] [157] [158] [159])
-[160
+ <creative.eps> [160] [161] [162] [163])
+[164
 
 
 
 
-] [161] [162] [163] (D:\coolpan\adbookNew\ALM-Monograph.aux
+] [165] [166] [167] (D:\coolpan\adbookNew\ALM-Monograph.aux
 (D:\coolpan\adbookNew\preface.aux) (D:\coolpan\adbookNew\ch1.aux)
 (D:\coolpan\adbookNew\ch2.aux) (D:\coolpan\adbookNew\ch3.aux)
 (D:\coolpan\adbookNew\ch4.aux) (D:\coolpan\adbookNew\ch5.aux)
@@ -1177,12 +1183,12 @@ LaTeX Warning: There were multiply-defined labels.
 
  ) 
 Here is how much of TeX's memory you used:
- 11779 strings out of 495355
- 157817 string characters out of 3183883
- 398566 words of memory out of 3000000
- 14530 multiletter control sequences out of 15000+200000
+ 12359 strings out of 495355
+ 164449 string characters out of 3183882
+ 412476 words of memory out of 3000000
+ 15107 multiletter control sequences out of 15000+200000
  94300 words of font info for 303 fonts, out of 3000000 for 9000
  14 hyphenation exceptions out of 8191
- 37i,17n,62p,1443b,2600s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 37i,17n,62p,1443b,3019s stack positions out of 5000i,500n,10000p,200000b,50000s
 
-Output written on ALM-Monograph.dvi (175 pages, 866464 bytes).
+Output written on ALM-Monograph.dvi (181 pages, 893532 bytes).

@@ -771,7 +771,7 @@ public void reduce(IntWritable key, Iterator<Text> values, Context context) thro
     SparseVector zUpdated = getZUpdated(rcontext);
     SparseVector[] xUpdated = rcontext.getXUpdated();
     String[] splitIds = rcontext.getSplitIds();
-    
+
     for (int mapperNumber = 0; mapperNumber < context.getNumberOfMappers(); mapperNumber++) {
         //`根据更新后的x和z更新s`
         SparseVector sUpdated = getSUpdated(rcontext, mapperNumber, zUpdated);
